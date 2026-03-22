@@ -564,6 +564,8 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
 .modal-fld{display:flex;flex-direction:column;gap:4px;margin-bottom:11px;}
 .modal-lbl{font-size:.63rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);}
 .modal-inp{background:rgba(255,255,255,.072);border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:9px 13px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-size:.84rem;font-weight:600;outline:none;transition:all .2s;width:100%;}
+.modal-inp option{background:#1a0038;color:#fff;font-size:.9rem;}
+select.modal-inp{appearance:auto;-webkit-appearance:auto;}
 .modal-inp:focus{border-color:rgba(192,132,252,.46);box-shadow:0 0 0 3px rgba(192,132,252,.08);}
 .modal-ta{height:72px;resize:none;}
 .modal-row{display:flex;gap:7px;}
@@ -1073,19 +1075,23 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
     <div class="modal-fld"><div class="modal-lbl">Nama Plan</div><input class="modal-inp" id="pm-name" placeholder="Nama rencana..."></div>
     <div class="modal-fld">
       <div class="modal-lbl">Emoji</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;" id="pm-icon-grid">
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🏖️</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎬</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🍕</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎵</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">✈️</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎮</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🏃</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎉</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🍜</span>
-        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🏠</span>
-      </div>
-      <input class="modal-inp" id="pm-icon" placeholder="Atau ketik emoji sendiri..." style="font-size:1.2rem;" maxlength="8">
+      <select class="modal-inp" id="pm-icon" style="font-size:1.1rem;cursor:pointer;">
+        <option value="🏖️">🏖️ Liburan / Pantai</option>
+        <option value="🎬">🎬 Nonton</option>
+        <option value="🍕">🍕 Makan Bareng</option>
+        <option value="🎵">🎵 Konser / Musik</option>
+        <option value="✈️">✈️ Perjalanan</option>
+        <option value="🎮">🎮 Game Night</option>
+        <option value="🏃">🏃 Olahraga</option>
+        <option value="🎉">🎉 Pesta / Perayaan</option>
+        <option value="🍜">🍜 Kuliner</option>
+        <option value="🏠">🏠 Rumahan</option>
+        <option value="🛍️">🛍️ Shopping</option>
+        <option value="📚">📚 Belajar Bareng</option>
+        <option value="🎂">🎂 Ulang Tahun</option>
+        <option value="🌴">🌴 Piknik</option>
+        <option value="🎤">🎤 Karaoke</option>
+      </select>
     </div>
     <div class="modal-fld"><div class="modal-lbl">Deskripsi</div><textarea class="modal-inp modal-ta" id="pm-desc" placeholder="Ceritain rencananya..."></textarea></div>
     <div class="modal-fld"><div class="modal-lbl">Tanggal (opsional, untuk countdown)</div><input class="modal-inp" id="pm-date" type="date"></div>
@@ -1104,28 +1110,25 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
     <div class="modal-fld">
       <div class="modal-lbl">Emoji</div>
       <!-- Quick pick grid -->
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;" id="wm-em-grid">
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">👟</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">👜</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">👗</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">📱</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">💻</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎧</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">📷</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎮</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎵</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">📚</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">✈️</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🏠</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🚗</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">💍</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🌟</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">💄</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🍕</span>
-        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">☕</span>
-      </div>
-      <!-- Manual input -->
-      <input class="modal-inp" id="wm-em" placeholder="Atau ketik/paste emoji sendiri..." style="font-size:1.2rem;" maxlength="8">
+      <select class="modal-inp" id="wm-em" style="font-size:1.1rem;cursor:pointer;">
+        <option value="👟">👟 Sepatu</option>
+        <option value="👜">👜 Tas</option>
+        <option value="👗">👗 Baju / Fashion</option>
+        <option value="📱">📱 Handphone</option>
+        <option value="💻">💻 Laptop</option>
+        <option value="🎧">🎧 Headphone / Earphone</option>
+        <option value="📷">📷 Kamera</option>
+        <option value="🎮">🎮 Gaming</option>
+        <option value="🎵">🎵 Musik</option>
+        <option value="📚">📚 Buku</option>
+        <option value="✈️">✈️ Liburan</option>
+        <option value="🏠">🏠 Rumah / Properti</option>
+        <option value="🚗">🚗 Kendaraan</option>
+        <option value="💍">💍 Perhiasan</option>
+        <option value="💄">💄 Skincare / Makeup</option>
+        <option value="☕">☕ Makanan / Minuman</option>
+        <option value="🌟">🌟 Lainnya</option>
+      </select>
     </div>
     <div class="modal-fld"><div class="modal-lbl">Estimasi Harga</div><input class="modal-inp" id="wm-price" placeholder="Rp ..."></div>
     <div class="modal-fld"><div class="modal-lbl">Catatan</div><input class="modal-inp" id="wm-note" placeholder="Catatan singkat..."></div>
@@ -2064,7 +2067,8 @@ function addKen(){
     date:now,likes:0,likedBy:[],addedBy:CU.username
   });
   ss('kenangan',kenList);
-  renderKen(); // render lokal dulu biar langsung keliatan
+  renderKen();
+  updateStats();
   if(window._fbReady) fbSet('squad/kenangan', kenList);
   closeModal('ken-modal');resetKenForm();
   toast('Kenangan ditambahkan! 💜');
@@ -2074,7 +2078,17 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 // ===================== WISHLIST =====================
 const defWish={};
 let wishData={},activeWish='me';
-function buildWishlist(){wishData=sg('wishlist')||defWish;renderWishTabs();renderWishList();}
+async function buildWishlist(){
+  if(window._fbReady){
+    const fbW=await fbGet('squad/wishlist');
+    if(fbW){wishData=fbW;ss('wishlist',fbW);}
+    else{wishData=sg('wishlist')||{};}
+  } else {
+    wishData=sg('wishlist')||{};
+  }
+  renderWishTabs();
+  renderWishList();
+}
 function renderWishTabs(){
   const el=document.getElementById('wish-tabs');
   const myKey=CU.username;
@@ -2089,9 +2103,9 @@ function renderWishTabs(){
 function switchWish(k){activeWish=k;renderWishTabs();renderWishList();}
 function renderWishList(){
   const el=document.getElementById('wi-list');if(!el)return;
-  // Selalu pakai username sebagai key, 'me' sudah tidak dipakai
-  const lookupKey = (activeWish==='me') ? CU.username : activeWish;
-  const list=wishData[lookupKey]||[];
+  // Selalu pakai username sebagai key
+  const lookupKey = (!activeWish||activeWish==='me') ? CU.username : activeWish;
+  const list=Array.isArray(wishData[lookupKey]) ? wishData[lookupKey] : [];
   const isMe = lookupKey===CU.username;
   // show add btn only on own tab
   const addBtn=document.getElementById('wish-add-btn');
@@ -2120,16 +2134,24 @@ function toggleWish(id){
 }
 function addWish(){
   const name=document.getElementById('wm-name').value.trim();
-  const em=document.getElementById('wm-em').value.trim()||'⭐';
+  const emEl=document.getElementById('wm-em');
+  const em=emEl?emEl.value.trim()||'⭐':'⭐';
   const price=document.getElementById('wm-price').value.trim()||'-';
   const note=document.getElementById('wm-note').value.trim()||'';
   if(!name){toast('Isi nama item dulu ya!');return;}
-  if(!wishData['me'])wishData['me']=[];
-  wishData['me'].push({id:Date.now(),em,name,price,note,done:false});
+  // SELALU pakai CU.username sebagai key
+  const wkey=CU.username;
+  if(!wishData[wkey])wishData[wkey]=[];
+  wishData[wkey].push({id:Date.now(),em,name,price,note,done:false,addedBy:CU.username});
   ss('wishlist',wishData);
-  activeWish='me';renderWishTabs();renderWishList();
+  if(window._fbReady) fbSet('squad/wishlist/'+wkey, wishData[wkey]);
+  activeWish=wkey;
+  renderWishTabs();
+  renderWishList();
   closeModal('wish-modal');
-  document.getElementById('wm-name').value='';document.getElementById('wm-em').value='';document.getElementById('wm-price').value='';document.getElementById('wm-note').value='';
+  // reset form
+  ['wm-name','wm-price','wm-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const emS=document.getElementById('wm-em');if(emS&&emS.options)emS.selectedIndex=0;
   toast('Wishlist ditambahkan! 🌟');
 }
 function deleteWish(id){
@@ -2164,12 +2186,12 @@ async function buildPlan(){
     if(fbP){ const arr=Array.isArray(fbP)?fbP:Object.values(fbP); ss('plans',arr); }
   }
   let plans=sg('plans')||[];
-  const el=document.getElementById('plan-list');if(!el)return;el.innerHTML=plans.map(p=>{const voted=p.votes.includes(CU.username);const vas=members.filter(m=>p.votes.includes(m.username)).slice(0,4);return `<div class="pc" style="background:${p.bg};backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);"><div class="pt"><div class="pi" style="background:rgba(255,255,255,.10)">${p.icon}</div><div><div class="pn">${p.name}</div><div class="pd2">📅 ${p.date}</div></div></div><div class="pdsc">${p.desc}</div><div class="pf">${vas.map((m,i)=>`<div class="pv" style="background:${m.color};margin-left:${i?'-4px':'0'}">${m.avatar}</div>`).join('')}<span class="pvc">${p.votes.length} vote</span><button class="vb ${voted?'voted':''}" onclick="votePlan(${p.id})">${voted?'✓ Voted':'Vote!'}</button></div></div>`;}).join('');}
+  buildPlanFromLocal(plans);
 const PL_BG=['linear-gradient(135deg,rgba(6,182,212,.14),rgba(14,165,233,.09))','linear-gradient(135deg,rgba(168,85,247,.14),rgba(236,72,153,.09))','linear-gradient(135deg,rgba(245,158,11,.14),rgba(251,191,36,.09))','linear-gradient(135deg,rgba(16,185,129,.14),rgba(52,211,153,.09))','linear-gradient(135deg,rgba(239,68,68,.14),rgba(248,113,113,.09))'];
 
 function addPlan(){
   const name=document.getElementById('pm-name').value.trim();
-  const icon=document.getElementById('pm-icon').value.trim()||'📅';
+  const iconEl=document.getElementById('pm-icon'); const icon=iconEl?iconEl.value.trim()||'📅':'📅';
   const desc=document.getElementById('pm-desc').value.trim();
   const date=document.getElementById('pm-date').value;
   if(!name){toast('Isi nama plan dulu ya!');return;}
@@ -2183,14 +2205,37 @@ function addPlan(){
     votes:[CU.username],bg,addedBy:CU.username
   });
   ss('plans',plans);
-  buildPlan();startCd(); // render lokal dulu
   if(window._fbReady) fbSet('squad/plans',plans);
+  // render langsung tanpa tunggu Firebase
+  const el=document.getElementById('plan-list');
+  if(el) buildPlanFromLocal(plans);
+  startCd();
   closeModal('plan-modal');
-  document.getElementById('pm-name').value='';
-  document.getElementById('pm-icon').value='';
-  document.getElementById('pm-desc').value='';
-  document.getElementById('pm-date').value='';
+  ['pm-name','pm-desc','pm-date'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const iconS=document.getElementById('pm-icon');if(iconS&&iconS.options)iconS.selectedIndex=0;
   toast('Plan ditambahkan! 📅');
+}
+
+function buildPlanFromLocal(plans){
+  const el=document.getElementById('plan-list');if(!el)return;
+  if(!plans||!plans.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:.82rem;">Belum ada plan. Bikin dulu yuk! 📅</div>';return;}
+  el.innerHTML=plans.map(p=>{
+    const voted=(p.votes||[]).includes(CU.username);
+    const vas=members.filter(m=>(p.votes||[]).includes(m.username)).slice(0,4);
+    return `<div class="pc" style="background:${p.bg};backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);">
+      <div class="pt">
+        <div class="pi" style="background:rgba(255,255,255,.10)">${p.icon}</div>
+        <div style="flex:1"><div class="pn">${p.name}</div><div class="pd2">📅 ${p.date}</div></div>
+        ${p.addedBy===CU.username?`<button onclick="deletePlan(${p.id})" style="background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.2);border-radius:8px;padding:3px 8px;color:#fb7185;font-size:.65rem;font-weight:700;cursor:pointer;">Hapus</button>`:''}
+      </div>
+      <div class="pdsc">${p.desc}</div>
+      <div class="pf">
+        ${vas.map((m,i)=>`<div class="pv" style="background:${m.color};margin-left:${i?'-4px':'0'}">${m.avatar}</div>`).join('')}
+        <span class="pvc">${(p.votes||[]).length} vote</span>
+        <button class="vb ${voted?'voted':''}" onclick="votePlan(${p.id})">${voted?'✓ Voted':'Vote!'}</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function deletePlan(id){
