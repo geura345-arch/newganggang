@@ -216,6 +216,13 @@ body{font-family:'Nunito','Segoe UI','Arial Rounded MT Bold',Arial,sans-serif;}
   justify-content:center;color:#fff;font-size:.7rem;font-weight:900;}
 .remember-lbl{font-size:.74rem;font-weight:700;color:rgba(255,255,255,.5);cursor:pointer;user-select:none;}
 .scene-q{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.22);letter-spacing:.3px;font-style:italic;text-align:center;margin-top:10px;line-height:1.5;position:relative;z-index:1;}
+.l-tabs{display:flex;gap:0;margin-bottom:20px;background:rgba(255,255,255,.07);border-radius:12px;padding:3px;position:relative;z-index:1;}
+.l-tab{flex:1;padding:9px;border:none;border-radius:9px;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;transition:all .22s;background:transparent;color:rgba(255,255,255,.45);}
+.l-tab.active{background:linear-gradient(135deg,#9333ea,#ec4899);color:#fff;box-shadow:0 3px 12px rgba(147,51,234,.4);}
+.l-tab:hover:not(.active){color:#fff;background:rgba(255,255,255,.08);}
+.l-panel{display:none;flex-direction:column;gap:14px;}
+.l-panel.active{display:flex;}
+.l-success{font-size:.75rem;color:#4ade80;font-weight:700;min-height:15px;text-align:center;}
 
 /* transition loading */
 #load-ov{position:fixed;inset:0;z-index:300;background:rgba(8,0,20,.82);backdrop-filter:blur(18px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
@@ -773,45 +780,77 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
   <div class="lc">
     <div class="cg1"></div><div class="cg2"></div>
     <div class="l-logo">Crazy Squad 💜</div>
-    <div class="l-sub">Masukkan data kamu untuk masuk ke ruang privat squad ✨</div>
 
-    <div class="wj">
+    <!-- Tabs -->
+    <div class="l-tabs">
+      <button class="l-tab active" id="tab-masuk" onclick="switchTab('masuk')">🔑 Masuk</button>
+      <button class="l-tab" id="tab-daftar" onclick="switchTab('daftar')">✨ Daftar</button>
+    </div>
+
+    <!-- Who joined -->
+    <div class="wj" style="position:relative;z-index:1;">
       <div class="wj-lbl">Sudah Bergabung</div>
       <div class="wj-chips" id="wj-chips"><div style="font-size:.68rem;color:rgba(255,255,255,.28);font-style:italic;">Jadilah yang pertama! 🥳</div></div>
     </div>
 
-    <div class="fld">
-      <div class="lbl">Nama Lengkap</div>
-      <div class="inp-w">
-        <span class="i-ico">👤</span>
-        <input class="inp" id="l-name" type="text" placeholder="Nama lengkap kamu..." autocomplete="off" oninput="previewUname()" onkeydown="if(event.key==='Enter')document.getElementById('l-dob').focus()">
+    <!-- ── PANEL MASUK ── -->
+    <div class="l-panel active" id="panel-masuk">
+      <div class="fld">
+        <div class="lbl">Nama Lengkap</div>
+        <div class="inp-w">
+          <span class="i-ico">👤</span>
+          <input class="inp" id="li-name" type="text" placeholder="Nama lengkap kamu..." autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('li-pw').focus()">
+        </div>
       </div>
-      <div class="inp-hint auto" id="l-preview"></div>
+      <div class="fld">
+        <div class="lbl">Password Squad</div>
+        <div class="inp-w">
+          <span class="i-ico">🔐</span>
+          <input class="inp" id="li-pw" type="password" placeholder="Password rahasia..." autocomplete="off" onkeydown="if(event.key==='Enter')doMasuk()">
+          <button class="eye-btn" onclick="toggleEyeById('li-pw')">👁️</button>
+        </div>
+        <div class="inp-hint err" id="li-err"></div>
+      </div>
+      <button class="l-btn" onclick="doMasuk()">Masuk ke Squad 💜</button>
+      <div class="remember-row">
+        <input type="checkbox" class="remember-cb" id="remember-me" checked>
+        <label class="remember-lbl" for="remember-me">Ingat saya di perangkat ini</label>
+      </div>
+      <div style="text-align:center;font-size:.72rem;color:rgba(255,255,255,.35);font-weight:600;position:relative;z-index:1;">
+        Belum punya akun? <span onclick="switchTab('daftar')" style="color:var(--pink);cursor:pointer;font-weight:800;">Daftar dulu ✨</span>
+      </div>
     </div>
 
-    <div class="fld">
-      <div class="lbl">Tanggal Lahir</div>
-      <div class="inp-w">
-        <span class="i-ico">🎂</span>
-        <input class="inp" id="l-dob" type="date" style="padding-left:38px" onkeydown="if(event.key==='Enter')document.getElementById('l-pw').focus()">
+    <!-- ── PANEL DAFTAR ── -->
+    <div class="l-panel" id="panel-daftar">
+      <div class="fld">
+        <div class="lbl">Nama Lengkap</div>
+        <div class="inp-w">
+          <span class="i-ico">👤</span>
+          <input class="inp" id="rd-name" type="text" placeholder="Nama lengkap kamu..." autocomplete="off" oninput="previewUname()" onkeydown="if(event.key==='Enter')document.getElementById('rd-dob').focus()">
+        </div>
+        <div class="inp-hint auto" id="l-preview"></div>
       </div>
-      <div class="inp-hint auto" id="l-dob-hint"></div>
-    </div>
-
-    <div class="fld">
-      <div class="lbl">Password Squad</div>
-      <div class="inp-w">
-        <span class="i-ico">🔐</span>
-        <input class="inp" id="l-pw" type="password" placeholder="Password rahasia..." autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
-        <button class="eye-btn" onclick="toggleEye()">👁️</button>
+      <div class="fld">
+        <div class="lbl">Tanggal Lahir</div>
+        <div class="inp-w">
+          <span class="i-ico">🎂</span>
+          <input class="inp" id="rd-dob" type="date" style="padding-left:38px" onkeydown="if(event.key==='Enter')document.getElementById('rd-pw').focus()">
+        </div>
       </div>
-      <div class="inp-hint err" id="l-err"></div>
-    </div>
-
-    <button class="l-btn" onclick="doLogin()">Masuk ke Squad 💜</button>
-    <div class="remember-row">
-      <input type="checkbox" class="remember-cb" id="remember-me" checked>
-      <label class="remember-lbl" for="remember-me">Ingat saya di perangkat ini</label>
+      <div class="fld">
+        <div class="lbl">Password Squad</div>
+        <div class="inp-w">
+          <span class="i-ico">🔐</span>
+          <input class="inp" id="rd-pw" type="password" placeholder="Password rahasia..." autocomplete="off" onkeydown="if(event.key==='Enter')doDaftar()">
+          <button class="eye-btn" onclick="toggleEyeById('rd-pw')">👁️</button>
+        </div>
+        <div class="inp-hint err" id="rd-err"></div>
+      </div>
+      <button class="l-btn" onclick="doDaftar()">Buat Akun 🎉</button>
+      <div style="text-align:center;font-size:.72rem;color:rgba(255,255,255,.35);font-weight:600;position:relative;z-index:1;">
+        Sudah punya akun? <span onclick="switchTab('masuk')" style="color:var(--pink);cursor:pointer;font-weight:800;">Masuk 🔑</span>
+      </div>
     </div>
     <div class="l-hint">Website privat Crazy Squad 🔐 · Hanya untuk squad SMAN 8!</div>
     <div class="scene-q">"Di puncak manapun, kita selalu ada buat satu sama lain 💜"</div>
@@ -1032,7 +1071,22 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
   <div class="modal-box">
     <div class="modal-title">📅 Tambah Plan</div>
     <div class="modal-fld"><div class="modal-lbl">Nama Plan</div><input class="modal-inp" id="pm-name" placeholder="Nama rencana..."></div>
-    <div class="modal-fld"><div class="modal-lbl">Emoji</div><input class="modal-inp" id="pm-icon" placeholder="🏖️ 🎬 🍕..." style="font-size:1.2rem;"></div>
+    <div class="modal-fld">
+      <div class="modal-lbl">Emoji</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;" id="pm-icon-grid">
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🏖️</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎬</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🍕</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎵</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">✈️</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎮</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🏃</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎉</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🍜</span>
+        <span onclick="pickPlanEmoji(this)" style="font-size:1.3rem;cursor:pointer;padding:3px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🏠</span>
+      </div>
+      <input class="modal-inp" id="pm-icon" placeholder="Atau ketik emoji sendiri..." style="font-size:1.2rem;" maxlength="8">
+    </div>
     <div class="modal-fld"><div class="modal-lbl">Deskripsi</div><textarea class="modal-inp modal-ta" id="pm-desc" placeholder="Ceritain rencananya..."></textarea></div>
     <div class="modal-fld"><div class="modal-lbl">Tanggal (opsional, untuk countdown)</div><input class="modal-inp" id="pm-date" type="date"></div>
     <div class="modal-row">
@@ -1044,14 +1098,39 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
 
 <!-- modal wishlist -->
 <div class="modal-ov" id="wish-modal">
-  <div class="modal-box">
+  <div class="modal-box" style="width:360px">
     <div class="modal-title">🌟 Tambah Wishlist</div>
     <div class="modal-fld"><div class="modal-lbl">Nama Item</div><input class="modal-inp" id="wm-name" placeholder="Nama barang/keinginan..."></div>
-    <div class="modal-fld"><div class="modal-lbl">Emoji</div><input class="modal-inp" id="wm-em" placeholder="👟 📱 🎧..." style="font-size:1.3rem;"></div>
+    <div class="modal-fld">
+      <div class="modal-lbl">Emoji</div>
+      <!-- Quick pick grid -->
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;" id="wm-em-grid">
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">👟</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">👜</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">👗</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">📱</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">💻</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎧</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">📷</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎮</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🎵</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">📚</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">✈️</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🏠</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🚗</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">💍</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🌟</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">💄</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">🍕</span>
+        <span onclick="pickWishEmoji(this)" style="font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:all .15s">☕</span>
+      </div>
+      <!-- Manual input -->
+      <input class="modal-inp" id="wm-em" placeholder="Atau ketik/paste emoji sendiri..." style="font-size:1.2rem;" maxlength="8">
+    </div>
     <div class="modal-fld"><div class="modal-lbl">Estimasi Harga</div><input class="modal-inp" id="wm-price" placeholder="Rp ..."></div>
     <div class="modal-fld"><div class="modal-lbl">Catatan</div><input class="modal-inp" id="wm-note" placeholder="Catatan singkat..."></div>
     <div class="modal-row">
-      <button class="modal-btn c" onclick="closeModal('wish-modal')">Batal</button>
+      <button class="modal-btn c" onclick="closeModal('wish-modal');resetWishForm()">Batal</button>
       <button class="modal-btn p" onclick="addWish()">Tambah 🌟</button>
     </div>
   </div>
@@ -1198,10 +1277,14 @@ function initScene(){
 // ===================== LOGIN =====================
 function genUname(n){return n.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'').substring(0,20);}
 function previewUname(){
-  const n=document.getElementById('l-name').value;
-  document.getElementById('l-preview').textContent=n.trim().length>=2?'Username: @'+genUname(n):'';
+  const el=document.getElementById('rd-name')||document.getElementById('l-name');
+  if(!el)return;
+  const n=el.value;
+  const prev=document.getElementById('l-preview');
+  if(prev)prev.textContent=n.trim().length>=2?'Username otomatis: @'+genUname(n):'';
 }
-function toggleEye(){const i=document.getElementById('l-pw');i.type=i.type==='password'?'text':'password';}
+function toggleEye(){toggleEyeById('li-pw');}
+function toggleEyeById(id){const i=document.getElementById(id);if(i)i.type=i.type==='password'?'text':'password';}
 
 function loadWhoJoined(){
   const mems=sg('members')||[];
@@ -1210,50 +1293,107 @@ function loadWhoJoined(){
   el.innerHTML=mems.map(m=>`<div class="wj-chip"><div class="wj-av" style="background:${m.color}">${m.avatar}</div>${m.name.split(' ')[0]}</div>`).join('');
 }
 
-function doLogin(){
-  const name=document.getElementById('l-name').value.trim();
-  const dob=document.getElementById('l-dob').value;
-  const pw=document.getElementById('l-pw').value;
-  const err=document.getElementById('l-err');
-  err.textContent='';
-  ['l-name','l-dob','l-pw'].forEach(id=>document.getElementById(id).classList.remove('err'));
+// ── Tab switch ──
+function switchTab(tab){
+  document.getElementById('tab-masuk').classList.toggle('active', tab==='masuk');
+  document.getElementById('tab-daftar').classList.toggle('active', tab==='daftar');
+  document.getElementById('panel-masuk').classList.toggle('active', tab==='masuk');
+  document.getElementById('panel-daftar').classList.toggle('active', tab==='daftar');
+  // clear errors
+  ['li-err','rd-err'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+}
 
-  if(name.length<2){markErr('l-name','Nama minimal 2 karakter ya!');return;}
-  if(!dob){markErr('l-dob','Tanggal lahir wajib diisi 🎂');return;}
-  if(pw!==PW){markErr('l-pw','Password salah! Tanya temen kamu 🔐');return;}
+// ── MASUK ──
+async function doMasuk(){
+  const name=document.getElementById('li-name').value.trim();
+  const pw=document.getElementById('li-pw').value;
+  document.getElementById('li-err').textContent='';
+  document.getElementById('li-name').classList.remove('err');
+  document.getElementById('li-pw').classList.remove('err');
 
-  // show loader
-  document.getElementById('load-ov').style.display='flex';
-  document.getElementById('lt-txt').textContent='Masuk ke Squad...';
+  if(name.length<2){markErr('li-name','Nama minimal 2 karakter ya!');return;}
+  if(pw!==PW){markErr('li-pw','Password salah! Tanya temen kamu 🔐');return;}
+
+  // Cek apakah akun dengan nama ini ada
+  const username=genUname(name);
+  let mems=sg('members')||[];
+  // Coba load dari Firebase dulu
+  if(window._fbReady){
+    const fbM=await fbGet('squad/members');
+    if(fbM){ mems=Object.values(fbM); ss('members',mems); }
+  }
+  const user=mems.find(m=>m.username===username||m.name.toLowerCase()===name.toLowerCase());
+  if(!user){
+    markErr('li-name','Akun tidak ditemukan. Daftar dulu ya! ✨');
+    // switch ke tab daftar
+    setTimeout(()=>switchTab('daftar'),1200);
+    return;
+  }
+
+  finishLogin(user, mems);
+}
+
+// ── DAFTAR ──
+async function doDaftar(){
+  const name=document.getElementById('rd-name').value.trim();
+  const dob=document.getElementById('rd-dob').value;
+  const pw=document.getElementById('rd-pw').value;
+  document.getElementById('rd-err').textContent='';
+  ['rd-name','rd-dob','rd-pw'].forEach(id=>document.getElementById(id).classList.remove('err'));
+
+  if(name.length<2){markErr('rd-name','Nama minimal 2 karakter ya!');return;}
+  if(!dob){markErr('rd-dob','Tanggal lahir wajib diisi 🎂');return;}
+  if(pw!==PW){markErr('rd-pw','Password salah! Tanya temen kamu 🔐');return;}
 
   const username=genUname(name);
   let mems=sg('members')||[];
-  let user=mems.find(m=>m.username===username);
-  if(!user){
-    const idx=mems.length;
-    user={name,username,dob,avatar:AVS[idx%9],color:AVC[idx%9],idx};
-    mems.push(user);ss('members',mems);
-  } else {
-    // update dob if not set
-    if(!user.dob){user.dob=dob;ss('members',mems);}
-  }
-  // Simpan preferensi "Ingat Saya"
-  const remCb = document.getElementById('remember-me');
-  const remember = remCb ? remCb.checked : true;
-  localStorage.setItem('cs_remember', remember ? 'true' : 'false');
-  CU=user;members=mems;ss('session',user);
 
-  // Save member token to Firebase for rules validation
+  // Load dari Firebase dulu untuk cek nama terbaru
+  if(window._fbReady){
+    const fbM=await fbGet('squad/members');
+    if(fbM){ mems=Object.values(fbM); ss('members',mems); }
+  }
+
+  // Cek apakah nama sudah terdaftar
+  const existing=mems.find(m=>
+    m.username===username ||
+    m.name.toLowerCase()===name.toLowerCase()
+  );
+  if(existing){
+    markErr('rd-name','Maaf, kamu sudah punya akun dengan nama ini 😊');
+    return;
+  }
+
+  // Buat akun baru
+  document.getElementById('load-ov').style.display='flex';
+  document.getElementById('lt-txt').textContent='Membuat akun...';
+
+  const idx=mems.length;
+  const newUser={name,username,dob,avatar:AVS[idx%9],color:AVC[idx%9],idx};
+  mems.push(newUser);
+  ss('members',mems);
+
+  finishLogin(newUser, mems);
+}
+
+// ── FINISH LOGIN (shared) ──
+function finishLogin(user, mems){
+  const remCb=document.getElementById('remember-me');
+  const remember=remCb?remCb.checked:true;
+  localStorage.setItem('cs_remember', remember?'true':'false');
+  CU=user; members=mems; ss('session',user);
+
+  document.getElementById('load-ov').style.display='flex';
+  document.getElementById('lt-txt').textContent='Masuk ke Squad...';
+
   genMemberToken(user.username).then(async token=>{
-    user.token=token;ss('session',user);CU=user;
+    user.token=token; ss('session',user); CU=user;
     if(window._fbReady){
-      // Store member data + token in Firebase
       await fbSet('squad/members/'+user.username, {
-        name:user.name, username:user.username, dob:user.dob,
+        name:user.name, username:user.username, dob:user.dob||'',
         avatar:user.avatar, color:user.color, idx:user.idx,
-        token:token, lastSeen: Date.now()
+        token:token, lastSeen:Date.now()
       });
-      // Store all members in sync
       await dbSet('members', mems);
     }
     document.getElementById('load-ov').style.display='none';
@@ -1261,10 +1401,15 @@ function doLogin(){
   });
 }
 
+function doLogin(){doMasuk();} // backward compat
+
 function markErr(id,msg){
-  document.getElementById(id).classList.add('err');
-  setTimeout(()=>document.getElementById(id).classList.remove('err'),600);
-  document.getElementById('l-err').textContent=msg;
+  const el=document.getElementById(id);
+  if(el){el.classList.add('err');setTimeout(()=>el.classList.remove('err'),600);}
+  // cari error container yang sesuai
+  const errMap={'li-name':'li-err','li-pw':'li-err','rd-name':'rd-err','rd-dob':'rd-err','rd-pw':'rd-err','l-name':'li-err','l-pw':'li-err'};
+  const errEl=document.getElementById(errMap[id]||'li-err');
+  if(errEl)errEl.textContent=msg;
 }
 
 function transitionToApp(){
@@ -1293,10 +1438,12 @@ function doLogout(){
   document.getElementById('sky-app').style.opacity='0';
   document.getElementById('mtn-layer').style.opacity='1';
   loadWhoJoined();
-  document.getElementById('l-name').value='';
-  document.getElementById('l-pw').value='';
-  document.getElementById('l-dob').value='';
-  document.getElementById('l-preview').textContent='';
+  ['li-name','li-pw','rd-name','rd-pw','rd-dob'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  const prev=document.getElementById('l-preview');
+  if(prev)prev.textContent='';
+  switchTab('masuk');
   CU=null;
 }
 
@@ -1416,7 +1563,7 @@ function checkSession(){
   const sess=sg('session');
   if(sess){
     // Auto-fill nama di login form biar keliatan siapa yang login
-    const nameInp=document.getElementById('l-name');
+    const nameInp=document.getElementById('li-name');
     if(nameInp && sess.name) nameInp.value=sess.name;
     CU=sess;members=sg('members')||[CU];
     document.getElementById('sky-mtn').style.transition='none';
@@ -1917,8 +2064,8 @@ function addKen(){
     date:now,likes:0,likedBy:[],addedBy:CU.username
   });
   ss('kenangan',kenList);
+  renderKen(); // render lokal dulu biar langsung keliatan
   if(window._fbReady) fbSet('squad/kenangan', kenList);
-  else renderKen();
   closeModal('ken-modal');resetKenForm();
   toast('Kenangan ditambahkan! 💜');
 }
@@ -1942,9 +2089,10 @@ function renderWishTabs(){
 function switchWish(k){activeWish=k;renderWishTabs();renderWishList();}
 function renderWishList(){
   const el=document.getElementById('wi-list');if(!el)return;
+  // Selalu pakai username sebagai key, 'me' sudah tidak dipakai
   const lookupKey = (activeWish==='me') ? CU.username : activeWish;
   const list=wishData[lookupKey]||[];
-  const isMe=activeWish===CU.username||activeWish==='me';
+  const isMe = lookupKey===CU.username;
   // show add btn only on own tab
   const addBtn=document.getElementById('wish-add-btn');
   if(addBtn)addBtn.style.display=isMe?'':'none';
@@ -2010,13 +2158,79 @@ async function setMood(el,em,lbl){
 
 // ===================== PLAN =====================
 const defPlan=[];
-function buildPlan(){let plans=sg('plans')||defPlan;const el=document.getElementById('plan-list');if(!el)return;el.innerHTML=plans.map(p=>{const voted=p.votes.includes(CU.username);const vas=members.filter(m=>p.votes.includes(m.username)).slice(0,4);return `<div class="pc" style="background:${p.bg};backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);"><div class="pt"><div class="pi" style="background:rgba(255,255,255,.10)">${p.icon}</div><div><div class="pn">${p.name}</div><div class="pd2">📅 ${p.date}</div></div></div><div class="pdsc">${p.desc}</div><div class="pf">${vas.map((m,i)=>`<div class="pv" style="background:${m.color};margin-left:${i?'-4px':'0'}">${m.avatar}</div>`).join('')}<span class="pvc">${p.votes.length} vote</span><button class="vb ${voted?'voted':''}" onclick="votePlan(${p.id})">${voted?'✓ Voted':'Vote!'}</button></div></div>`;}).join('');}
-function votePlan(id){let plans=sg('plans')||defPlan;const p=plans.find(x=>x.id===id);if(!p)return;if(p.votes.includes(CU.username)){p.votes=p.votes.filter(u=>u!==CU.username);}else{p.votes.push(CU.username);}ss('plans',plans);buildPlan();toast(p.votes.includes(CU.username)?'Vote masuk! 🎉':'Vote dibatalkan');}
+async function buildPlan(){
+  if(window._fbReady){
+    const fbP=await fbGet('squad/plans');
+    if(fbP){ const arr=Array.isArray(fbP)?fbP:Object.values(fbP); ss('plans',arr); }
+  }
+  let plans=sg('plans')||[];
+  const el=document.getElementById('plan-list');if(!el)return;el.innerHTML=plans.map(p=>{const voted=p.votes.includes(CU.username);const vas=members.filter(m=>p.votes.includes(m.username)).slice(0,4);return `<div class="pc" style="background:${p.bg};backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);"><div class="pt"><div class="pi" style="background:rgba(255,255,255,.10)">${p.icon}</div><div><div class="pn">${p.name}</div><div class="pd2">📅 ${p.date}</div></div></div><div class="pdsc">${p.desc}</div><div class="pf">${vas.map((m,i)=>`<div class="pv" style="background:${m.color};margin-left:${i?'-4px':'0'}">${m.avatar}</div>`).join('')}<span class="pvc">${p.votes.length} vote</span><button class="vb ${voted?'voted':''}" onclick="votePlan(${p.id})">${voted?'✓ Voted':'Vote!'}</button></div></div>`;}).join('');}
+const PL_BG=['linear-gradient(135deg,rgba(6,182,212,.14),rgba(14,165,233,.09))','linear-gradient(135deg,rgba(168,85,247,.14),rgba(236,72,153,.09))','linear-gradient(135deg,rgba(245,158,11,.14),rgba(251,191,36,.09))','linear-gradient(135deg,rgba(16,185,129,.14),rgba(52,211,153,.09))','linear-gradient(135deg,rgba(239,68,68,.14),rgba(248,113,113,.09))'];
+
+function addPlan(){
+  const name=document.getElementById('pm-name').value.trim();
+  const icon=document.getElementById('pm-icon').value.trim()||'📅';
+  const desc=document.getElementById('pm-desc').value.trim();
+  const date=document.getElementById('pm-date').value;
+  if(!name){toast('Isi nama plan dulu ya!');return;}
+  let plans=sg('plans')||[];
+  const bg=PL_BG[plans.length%PL_BG.length];
+  const dateLabel=date?new Date(date).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}):'TBD';
+  plans.push({
+    id:Date.now(),icon,name,
+    date:dateLabel,eventDate:date||'',
+    desc:desc||'Plan baru squad! 🎉',
+    votes:[CU.username],bg,addedBy:CU.username
+  });
+  ss('plans',plans);
+  buildPlan();startCd(); // render lokal dulu
+  if(window._fbReady) fbSet('squad/plans',plans);
+  closeModal('plan-modal');
+  document.getElementById('pm-name').value='';
+  document.getElementById('pm-icon').value='';
+  document.getElementById('pm-desc').value='';
+  document.getElementById('pm-date').value='';
+  toast('Plan ditambahkan! 📅');
+}
+
+function deletePlan(id){
+  let plans=sg('plans')||[];
+  plans=plans.filter(p=>p.id!==id);
+  ss('plans',plans);
+  buildPlan();
+  if(window._fbReady) fbSet('squad/plans',plans);
+  toast('Plan dihapus!');
+}
+
+function votePlan(id){
+  let plans=sg('plans')||[];
+  const p=plans.find(x=>x.id===id);if(!p)return;
+  if(p.votes.includes(CU.username)){p.votes=p.votes.filter(u=>u!==CU.username);}
+  else{p.votes.push(CU.username);}
+  ss('plans',plans);
+  buildPlan();
+  if(window._fbReady) fbSet('squad/plans',plans);
+  toast(p.votes.includes(CU.username)?'Vote masuk! 🎉':'Vote dibatalkan');
+}
 
 // ===================== TOAST =====================
 function toast(msg,dur=2400){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),dur);}
 
 // ===================== INIT =====================
+// ── RESET SEMUA SESSION (jalankan sekali untuk paksa login ulang) ──
+const RESET_VERSION = 'v3'; // ganti angka ini kalau mau reset ulang di masa depan
+if(localStorage.getItem('cs_reset_ver') !== RESET_VERSION){
+  // Hapus semua data session & member dari localStorage
+  Object.keys(localStorage)
+    .filter(k=>k.startsWith('cs_'))
+    .forEach(k=>localStorage.removeItem(k));
+  Object.keys(sessionStorage)
+    .filter(k=>k.startsWith('cs_'))
+    .forEach(k=>sessionStorage.removeItem(k));
+  localStorage.setItem('cs_reset_ver', RESET_VERSION);
+  console.log('🔄 Reset selesai — semua user harus login ulang');
+}
+
 initScene();checkSession();
 </script>
 </body>
