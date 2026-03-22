@@ -2218,23 +2218,32 @@ function addPlan(){
 
 function buildPlanFromLocal(plans){
   const el=document.getElementById('plan-list');if(!el)return;
-  if(!plans||!plans.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:.82rem;">Belum ada plan. Bikin dulu yuk! 📅</div>';return;}
-  el.innerHTML=plans.map(p=>{
+  if(!plans||!plans.length){
+    el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:.82rem;">Belum ada plan. Bikin dulu yuk! 📅</div>';
+    return;
+  }
+  el.innerHTML=plans.map(function(p){
     const voted=(p.votes||[]).includes(CU.username);
-    const vas=members.filter(m=>(p.votes||[]).includes(m.username)).slice(0,4);
-    return `<div class="pc" style="background:${p.bg};backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);">
-      <div class="pt">
-        <div class="pi" style="background:rgba(255,255,255,.10)">${p.icon}</div>
-        <div style="flex:1"><div class="pn">${p.name}</div><div class="pd2">📅 ${p.date}</div></div>
-        ${p.addedBy===CU.username?`<button onclick="deletePlan(${p.id})" style="background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.2);border-radius:8px;padding:3px 8px;color:#fb7185;font-size:.65rem;font-weight:700;cursor:pointer;">Hapus</button>`:''}
-      </div>
-      <div class="pdsc">${p.desc}</div>
-      <div class="pf">
-        ${vas.map((m,i)=>`<div class="pv" style="background:${m.color};margin-left:${i?'-4px':'0'}">${m.avatar}</div>`).join('')}
-        <span class="pvc">${(p.votes||[]).length} vote</span>
-        <button class="vb ${voted?'voted':''}" onclick="votePlan(${p.id})">${voted?'✓ Voted':'Vote!'}</button>
-      </div>
-    </div>`;
+    const vas=members.filter(function(m){return (p.votes||[]).includes(m.username);}).slice(0,4);
+    const delBtn=p.addedBy===CU.username
+      ? '<button onclick="deletePlan('+p.id+')" style="background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.2);border-radius:8px;padding:3px 8px;color:#fb7185;font-size:.65rem;font-weight:700;cursor:pointer;">Hapus</button>'
+      : '';
+    const vaHtml=vas.map(function(m,i){
+      return '<div class="pv" style="background:'+m.color+';margin-left:'+(i?'-4px':'0')+'">'+m.avatar+'</div>';
+    }).join('');
+    const vbClass='vb'+(voted?' voted':'');
+    const vbTxt=voted?'✓ Voted':'Vote!';
+    return '<div class="pc" style="background:'+p.bg+';backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);">'
+      +'<div class="pt">'
+      +'<div class="pi" style="background:rgba(255,255,255,.10)">'+p.icon+'</div>'
+      +'<div style="flex:1"><div class="pn">'+p.name+'</div><div class="pd2">📅 '+p.date+'</div></div>'
+      +delBtn
+      +'</div>'
+      +'<div class="pdsc">'+p.desc+'</div>'
+      +'<div class="pf">'+vaHtml
+      +'<span class="pvc">'+((p.votes||[]).length)+' vote</span>'
+      +'<button class="'+vbClass+'" onclick="votePlan('+p.id+')">'+vbTxt+'</button>'
+      +'</div></div>';
   }).join('');
 }
 
@@ -2250,12 +2259,13 @@ function deletePlan(id){
 function votePlan(id){
   let plans=sg('plans')||[];
   const p=plans.find(x=>x.id===id);if(!p)return;
+  if(!p.votes)p.votes=[];
   if(p.votes.includes(CU.username)){p.votes=p.votes.filter(u=>u!==CU.username);}
   else{p.votes.push(CU.username);}
   ss('plans',plans);
   buildPlan();
   if(window._fbReady) fbSet('squad/plans',plans);
-  toast(p.votes.includes(CU.username)?'Vote masuk! 🎉':'Vote dibatalkan');
+  toast((p.votes||[]).includes(CU.username)?'Vote masuk! 🎉':'Vote dibatalkan');
 }
 
 // ===================== TOAST =====================
