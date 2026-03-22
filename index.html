@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crazy Squad 💜</title>
+<!-- Firebase SDK -->
+<script type="module">
+// ===================== FIREBASE CONFIG =====================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, push, update, remove, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, signInAnonymously }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyDU5Spu3moO7kqKC1uU89xkdO5x5oljA5s",
+  authDomain:        "ourgenggengweb.firebaseapp.com",
+  databaseURL:       "https://ourgenggengweb-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "ourgenggengweb",
+  storageBucket:     "ourgenggengweb.firebasestorage.app",
+  messagingSenderId: "618738088549",
+  appId:             "1:618738088549:web:6b57a6bc3fb5c614b4a48c"
+};
+
+const app    = initializeApp(firebaseConfig);
+const db     = getDatabase(app);
+const auth   = getAuth(app);
+
+// Expose ke window supaya bisa dipanggil dari JS non-module
+window._fb = { db, ref, set, get, onValue, push, update, remove, serverTimestamp, auth, signInAnonymously };
+window._fbReady = false;
+
+// Sign in anonymously — Firebase Auth wajib aktif (Anonymous sign-in)
+signInAnonymously(auth).then(()=>{
+  window._fbReady = true;
+  window._fbUID   = auth.currentUser?.uid || null;
+  console.log('Firebase ready, uid:', window._fbUID);
+  // Trigger app to switch from localStorage to Firebase
+  if(window._onFirebaseReady) window._onFirebaseReady();
+}).catch(e=>{
+  console.warn('Firebase anonymous auth gagal, fallback ke localStorage:', e.message);
+  window._fbReady = false;
+  if(window._onFirebaseReady) window._onFirebaseReady();
+});
+</script>
+<style>
+/* Primary: Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&family=Syne:wght@700;800;900&display=swap');
+/* Backup: Bunny Fonts (different CDN) */
+@import url('https://fonts.bunny.net/css?family=pacifico:400|nunito:400,600,700,800,900|syne:700,800,900&display=swap');
+
+/* ===================== RESET & BASE ===================== */
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;color:#fff;}
+
+/* Font stacks — graceful fallback kalau Google Fonts ga load */
+body{font-family:'Nunito','Segoe UI','Arial Rounded MT Bold',Arial,sans-serif;}
+.nav-logo,.l-logo,.brand-logo,.h-title,.cd-n,.s-num,.bday-days,.bdc-days{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;}
+.pg-title,.modal-title,.bdc-name,.card-title,.l-title,.chat-hdr-n,.bday-title,.ww-t,nav .nb,
+.pg-hdr .pg-title{font-family:'Syne','Segoe UI Semibold','Arial Black','Trebuchet MS',sans-serif;}
+
+/* ===================== SHARED BG LAYER ===================== */
+/* This layer morphs between mountain (login) and space (app) */
+#bg-layer{position:fixed;inset:0;z-index:0;overflow:hidden;transition:all 1.2s ease;}
+
+/* -- Mountain sky -- */
+.sky-mtn{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 100% 55% at 50% -5%, #3b0080 0%, transparent 55%),
+    radial-gradient(ellipse 70% 45% at 18% 22%, #4a0090 0%, transparent 48%),
+    radial-gradient(ellipse 55% 38% at 82% 18%, #6b21a8 0%, transparent 45%),
+    linear-gradient(180deg,#0a001f 0%,#14003a 14%,#28006a 32%,#3e0078 48%,#340065 62%,#1e0845 78%,#0e0030 100%);
+  transition:opacity 1.2s ease;
+}
+/* -- App gradient overlay -- */
+.sky-app{
+  position:absolute;inset:0;opacity:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 5%, rgba(139,92,246,.85) 0%, transparent 52%),
+    radial-gradient(ellipse 70% 50% at 90% 12%, rgba(236,72,153,.72) 0%, transparent 52%),
+    radial-gradient(ellipse 55% 45% at 50% 50%, rgba(99,102,241,.48) 0%, transparent 58%),
+    radial-gradient(ellipse 75% 55% at 18% 92%, rgba(168,85,247,.58) 0%, transparent 48%),
+    radial-gradient(ellipse 65% 48% at 82% 82%, rgba(244,114,182,.52) 0%, transparent 48%),
+    linear-gradient(168deg,#1a0038 0%,#0d002e 28%,#160040 58%,#08001a 100%);
+  transition:opacity 1.2s ease;
+}
+/* blobs (always) */
+.blb{position:absolute;border-radius:50%;filter:blur(80px);animation:blob 14s ease-in-out infinite;}
+.b1{width:580px;height:580px;background:rgba(139,92,246,.52);top:-90px;left:-70px;}
+.b2{width:480px;height:480px;background:rgba(236,72,153,.48);top:8%;right:-90px;animation-delay:3s;}
+.b3{width:420px;height:420px;background:rgba(99,102,241,.42);bottom:-40px;left:18%;animation-delay:6s;}
+.b4{width:330px;height:330px;background:rgba(216,180,254,.38);bottom:18%;right:12%;animation-delay:9s;}
+.b5{width:260px;height:260px;background:rgba(244,114,182,.42);top:42%;left:42%;animation-delay:4.5s;}
+@keyframes blob{0%,100%{transform:scale(1) translate(0,0);}33%{transform:scale(1.2) translate(28px,-38px);}66%{transform:scale(.86) translate(-18px,28px);}}
+
+/* -- Mountain elements (login only) -- */
+#mtn-layer{position:absolute;inset:0;transition:opacity 1.2s ease;}
+.moon-el{position:absolute;top:7%;left:50%;transform:translateX(-50%);width:66px;height:66px;border-radius:50%;
+  background:radial-gradient(circle at 38% 38%,#fff 0%,#e9d5ff 28%,#c084fc 62%,transparent 78%);
+  box-shadow:0 0 38px 18px rgba(192,132,252,.35),0 0 75px 38px rgba(139,92,246,.2),0 0 115px 58px rgba(109,40,217,.1);
+  animation:moonpulse 6s ease-in-out infinite;}
+@keyframes moonpulse{0%,100%{box-shadow:0 0 38px 18px rgba(192,132,252,.35),0 0 75px 38px rgba(139,92,246,.2);}50%{box-shadow:0 0 52px 26px rgba(216,180,254,.45),0 0 95px 52px rgba(167,139,250,.28);}}
+.aurora{position:absolute;left:0;right:0;mix-blend-mode:screen;pointer-events:none;}
+.au1{top:11%;height:110px;background:linear-gradient(to right,transparent,rgba(139,92,246,.18) 22%,rgba(192,132,252,.24) 42%,rgba(167,139,250,.18) 62%,rgba(109,40,217,.12) 80%,transparent);filter:blur(18px);animation:aur 12s ease-in-out infinite;}
+.au2{top:19%;height:75px;background:linear-gradient(to right,transparent,rgba(216,180,254,.10) 32%,rgba(244,114,182,.14) 52%,rgba(192,132,252,.09) 72%,transparent);filter:blur(22px);animation:aur 16s ease-in-out infinite reverse;animation-delay:3s;}
+@keyframes aur{0%,100%{transform:scaleX(1) translateX(0);opacity:.7;}50%{transform:scaleX(1.1) translateX(3%);opacity:1;}}
+
+/* mountains */
+.mtn-far{position:absolute;bottom:0;left:0;right:0;height:55%;}
+.mtn-mid{position:absolute;bottom:0;left:0;right:0;height:62%;}
+.mtn-near{position:absolute;bottom:0;left:0;right:0;height:45%;}
+.mtn-fg{position:absolute;bottom:0;left:0;right:0;height:22%;}
+.mist{position:absolute;bottom:0;left:0;right:0;height:28%;background:linear-gradient(to top,rgba(70,0,130,.42) 0%,rgba(50,0,110,.18) 42%,transparent 100%);filter:blur(8px);}
+.mist2{position:absolute;bottom:8%;left:0;right:0;height:16%;background:linear-gradient(to top,transparent,rgba(120,50,190,.10) 50%,transparent);filter:blur(20px);animation:mistd 18s ease-in-out infinite;}
+@keyframes mistd{0%,100%{transform:translateX(0)scaleX(1);}50%{transform:translateX(2%)scaleX(1.04);}}
+
+/* bokeh */
+#bokeh{position:absolute;inset:0;pointer-events:none;}
+.bk{position:absolute;border-radius:50%;animation:bkf ease-in-out infinite;}
+@keyframes bkf{0%,100%{transform:translateY(0) scale(1);opacity:var(--op);}50%{transform:translateY(-16px) scale(1.18);opacity:calc(var(--op)*1.5);}}
+
+/* glass bubbles */
+#bub-layer{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.bub{position:absolute;border-radius:50%;animation:bubrise linear infinite;}
+@keyframes bubrise{0%{transform:translateY(110vh) scale(.2);opacity:0;}5%{opacity:1;}90%{opacity:.55;}100%{transform:translateY(-10vh) scale(1);opacity:0;}}
+
+/* stars */
+#stars{position:fixed;inset:0;z-index:1;pointer-events:none;}
+#grain{position:fixed;inset:-50%;width:200%;height:200%;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.036'/%3E%3C/svg%3E");
+  animation:gr 8s steps(12) infinite;}
+@keyframes gr{0%{transform:translate(0,0)}25%{transform:translate(-3%,-2%)}50%{transform:translate(3%,2%)}75%{transform:translate(-2%,3%)}100%{transform:translate(0,0)}}
+
+/* ===================== LOGIN PAGE ===================== */
+#login-view{
+  position:fixed;inset:0;z-index:10;
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  transition:opacity .8s ease, transform .8s ease;
+}
+#login-view.hide{opacity:0;transform:scale(1.04) translateY(-18px);pointer-events:none;}
+
+.brand-strip{position:absolute;top:0;left:0;right:0;padding:14px 26px;display:flex;align-items:center;justify-content:space-between;}
+.brand-logo{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:1.45rem;
+  background:linear-gradient(135deg,#fff,#e9d5ff,#c084fc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 12px rgba(192,132,252,.5));}
+.brand-tag{font-size:.7rem;font-weight:700;color:rgba(255,255,255,.38);letter-spacing:2px;text-transform:uppercase;}
+
+.lc{
+  width:100%;max-width:440px;
+  background:rgba(255,255,255,.075);
+  backdrop-filter:blur(55px);-webkit-backdrop-filter:blur(55px);
+  border:1px solid rgba(255,255,255,.22);border-radius:26px;
+  padding:36px 34px;
+  box-shadow:0 38px 95px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.22),0 0 70px rgba(139,92,246,.18);
+  animation:cardin .9s cubic-bezier(.34,1.56,.64,1) both;
+  position:relative;overflow:hidden;
+}
+@keyframes cardin{from{opacity:0;transform:translateY(32px) scale(.94);}to{opacity:1;transform:translateY(0) scale(1);}}
+.cg1{position:absolute;top:-75px;right:-75px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(192,132,252,.18),transparent 65%);filter:blur(38px);animation:blob 8s ease-in-out infinite;}
+.cg2{position:absolute;bottom:-55px;left:-55px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(244,114,182,.14),transparent 65%);filter:blur(32px);animation:blob 10s ease-in-out infinite;animation-delay:3s;}
+
+.l-logo{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:2rem;
+  background:linear-gradient(135deg,#fff,#f0abfc 45%,#a78bfa 82%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 18px rgba(192,132,252,.38));margin-bottom:4px;position:relative;z-index:1;}
+.l-sub{font-size:.78rem;color:rgba(255,255,255,.5);font-weight:600;margin-bottom:22px;position:relative;z-index:1;line-height:1.5;}
+
+/* who joined */
+.wj{margin-bottom:20px;position:relative;z-index:1;}
+.wj-lbl{font-size:.61rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:7px;}
+.wj-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.wj-chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:50px;padding:3px 9px 3px 4px;display:flex;align-items:center;gap:4px;font-size:.68rem;font-weight:700;backdrop-filter:blur(8px);}
+.wj-av{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;}
+
+/* form */
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;position:relative;z-index:1;}
+.lbl{font-size:.64rem;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:rgba(255,255,255,.38);}
+.inp-w{position:relative;}
+.i-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.88rem;pointer-events:none;}
+.inp{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:13px;
+     padding:11px 15px 11px 38px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-size:.9rem;font-weight:600;
+     outline:none;transition:all .24s;}
+.inp::placeholder{color:rgba(255,255,255,.24);}
+.inp:focus{background:rgba(255,255,255,.13);border-color:rgba(192,132,252,.52);box-shadow:0 0 0 3px rgba(192,132,252,.11);}
+.inp.err{border-color:rgba(251,113,133,.6);animation:shake .4s ease;}
+/* date input special */
+.inp[type=date]{color-scheme:dark;padding-right:15px;}
+.inp[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7) sepia(1) hue-rotate(230deg);cursor:pointer;opacity:.7;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+.eye-btn{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.32);font-size:.88rem;padding:0;transition:color .18s;}
+.eye-btn:hover{color:rgba(255,255,255,.68);}
+.inp-hint{font-size:.67rem;font-weight:700;min-height:15px;padding-left:2px;}
+.inp-hint.auto{color:#a78bfa;}.inp-hint.err{color:#fb7185;}
+
+.l-btn{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,#7c3aed,#9333ea,#c026d3);
+  border:none;border-radius:13px;color:#fff;
+  font-family:'Nunito','Segoe UI',Arial,sans-serif;font-weight:800;font-size:.98rem;
+  cursor:pointer;transition:all .28s;margin-top:2px;
+  box-shadow:0 4px 22px rgba(124,58,237,.42),inset 0 1px 0 rgba(255,255,255,.16);
+  position:relative;z-index:1;overflow:hidden;
+}
+.l-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.1),transparent);pointer-events:none;}
+.l-btn:hover{transform:translateY(-2px);box-shadow:0 7px 30px rgba(124,58,237,.62),inset 0 1px 0 rgba(255,255,255,.16);}
+.l-hint{font-size:.66rem;color:rgba(255,255,255,.26);font-weight:600;text-align:center;margin-top:13px;line-height:1.55;position:relative;z-index:1;}
+.remember-row{display:flex;align-items:center;gap:9px;position:relative;z-index:1;margin-top:2px;}
+.remember-cb{width:17px;height:17px;border-radius:5px;border:1.5px solid rgba(192,132,252,.45);
+  background:rgba(255,255,255,.07);cursor:pointer;appearance:none;-webkit-appearance:none;
+  flex-shrink:0;transition:all .2s;position:relative;}
+.remember-cb:checked{background:linear-gradient(135deg,#9333ea,#ec4899);border-color:transparent;}
+.remember-cb:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;color:#fff;font-size:.7rem;font-weight:900;}
+.remember-lbl{font-size:.74rem;font-weight:700;color:rgba(255,255,255,.5);cursor:pointer;user-select:none;}
+.scene-q{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.22);letter-spacing:.3px;font-style:italic;text-align:center;margin-top:10px;line-height:1.5;position:relative;z-index:1;}
+
+/* transition loading */
+#load-ov{position:fixed;inset:0;z-index:300;background:rgba(8,0,20,.82);backdrop-filter:blur(18px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+#load-ov.show{display:flex;}
+.ls{width:42px;height:42px;border:3px solid rgba(192,132,252,.18);border-top-color:#c084fc;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lt{font-size:.82rem;font-weight:700;color:rgba(255,255,255,.65);}
+
+/* ===================== APP VIEW ===================== */
+:root{
+  --glass:rgba(255,255,255,0.09);--glass2:rgba(255,255,255,0.16);
+  --border:rgba(255,255,255,0.18);
+  --text:#fff;--text2:rgba(255,255,255,0.76);--text3:rgba(255,255,255,0.42);
+  --pink:#f0abfc;--violet:#a78bfa;--rose:#fb7185;
+  --shadow:0 8px 40px rgba(168,85,247,0.32);
+  --inset:inset 0 1px 0 rgba(255,255,255,0.16);
+}
+#app-view{
+  position:fixed;inset:0;z-index:5;
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transition:opacity .9s ease;
+}
+#app-view.show{opacity:1;pointer-events:all;}
+
+.browser-frame{flex:1;margin:10px;border-radius:18px;overflow:hidden;
+  background:rgba(255,255,255,.055);backdrop-filter:blur(38px);-webkit-backdrop-filter:blur(38px);
+  border:1px solid rgba(255,255,255,.20);
+  box-shadow:0 40px 120px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.22),0 0 70px rgba(139,92,246,.14);
+  display:flex;flex-direction:column;}
+.bf-chrome{flex-shrink:0;padding:9px 16px 0;background:rgba(255,255,255,.065);border-bottom:1px solid rgba(255,255,255,.09);}
+.bf-dots{display:flex;gap:6px;margin-bottom:7px;}
+.bf-dot{width:11px;height:11px;border-radius:50%;}
+.bf-dot:nth-child(1){background:rgba(255,107,107,.7);}
+.bf-dot:nth-child(2){background:rgba(255,211,107,.7);}
+.bf-dot:nth-child(3){background:rgba(107,220,107,.7);}
+.bf-bar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 14px;margin-bottom:7px;max-width:340px;}
+.bf-lock{font-size:.64rem;opacity:.45;}.bf-url{font-size:.7rem;color:rgba(255,255,255,.5);font-weight:600;}
+.bf-inner{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+
+/* NAV */
+nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-content:space-between;
+    background:rgba(255,255,255,.065);border-bottom:1px solid rgba(255,255,255,.10);}
+.nav-logo{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:1.3rem;
+  background:linear-gradient(135deg,#fff,#f0abfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 10px rgba(192,132,252,.3));}
+.nav-links{display:flex;gap:2px;}
+.nb{background:none;border:1px solid transparent;color:rgba(255,255,255,.46);
+    font-family:'Nunito','Segoe UI',Arial,sans-serif;font-weight:700;font-size:.72rem;padding:5px 10px;border-radius:50px;cursor:pointer;transition:all .18s;}
+.nb:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nb.active{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.16);}
+.nav-r{display:flex;align-items:center;gap:6px;}
+.nav-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#c084fc,#f472b6);display:flex;align-items:center;justify-content:center;font-size:.84rem;border:2px solid rgba(255,255,255,.22);}
+.nav-name{font-size:.72rem;font-weight:700;color:var(--text2);max-width:85px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.out-btn{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);border-radius:20px;padding:4px 10px;color:var(--text3);font-family:'Nunito','Segoe UI',Arial,sans-serif;font-size:.68rem;font-weight:700;cursor:pointer;transition:all .18s;}
+.out-btn:hover{background:rgba(251,113,133,.12);color:#fb7185;border-color:rgba(251,113,133,.2);}
+
+/* PAGES */
+.page-wrap{flex:1;overflow:hidden;position:relative;}
+.page{display:none;position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(192,132,252,.16) transparent;}
+.page.active{display:block;}
+.page::-webkit-scrollbar{width:3px;}
+.page::-webkit-scrollbar-thumb{background:rgba(192,132,252,.18);border-radius:3px;}
+
+/* HOME */
+.hw{max-width:820px;margin:0 auto;padding:32px 24px 48px;}
+@keyframes fu{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.home-hero{text-align:center;padding:16px 0 36px;animation:fu .7s ease both;}
+.h-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(192,132,252,.12);border:1px solid rgba(192,132,252,.24);border-radius:50px;padding:5px 16px;font-size:.65rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin-bottom:16px;}
+.h-title{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:clamp(1.85rem,4.2vw,3.2rem);line-height:1.2;
+  background:linear-gradient(135deg,#fff 5%,#f0abfc 45%,#a78bfa 90%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 26px rgba(192,132,252,.26));margin-bottom:12px;}
+.h-sub{color:var(--text2);font-size:.9rem;font-weight:600;max-width:370px;margin:0 auto;}
+.stats-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:28px 0 32px;}
+.s-pill{background:rgba(255,255,255,.09);backdrop-filter:blur(26px);border:1px solid rgba(255,255,255,.18);border-radius:50px;padding:12px 22px;text-align:center;box-shadow:var(--inset),0 4px 16px rgba(0,0,0,.16);}
+.s-num{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:1.5rem;color:var(--pink);}
+.s-lbl{font-size:.62rem;font-weight:800;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-top:4px;}
+.g-card-pink{background:linear-gradient(135deg,rgba(168,85,247,.16),rgba(236,72,153,.10));backdrop-filter:blur(36px);border:1px solid rgba(192,132,252,.28);border-radius:20px;box-shadow:var(--inset),0 8px 32px rgba(168,85,247,.14);}
+.cd-card{padding:20px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden;}
+.cd-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(216,180,254,.09),transparent 56%);pointer-events:none;}
+.cd-lbl{font-size:.64rem;font-weight:800;letter-spacing:2px;color:var(--pink);text-transform:uppercase;margin-bottom:5px;}
+.cd-ev{font-weight:800;font-size:.94rem;margin-bottom:12px;}
+.cd-g{display:flex;justify-content:center;gap:10px;}
+.cd-u{text-align:center;}
+.cd-n{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:2.1rem;background:linear-gradient(135deg,#f0abfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;line-height:1;}
+.cd-nm{font-size:.57rem;font-weight:800;letter-spacing:1.4px;color:var(--text3);text-transform:uppercase;margin-top:2px;}
+.cd-sep{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:1.75rem;color:rgba(192,132,252,.36);align-self:center;margin-bottom:7px;}
+.mom-lbl{font-weight:800;font-size:.66rem;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:11px;margin-top:8px;}
+.mom-row{display:flex;gap:9px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;}
+.mom-row::-webkit-scrollbar{display:none;}
+.mom-card{flex:0 0 185px;background:rgba(255,255,255,.082);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.17);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .28s;box-shadow:var(--inset),0 4px 16px rgba(0,0,0,.16);}
+.mom-card:hover{transform:translateY(-4px) scale(1.02);box-shadow:var(--shadow),var(--inset);}
+.mom-img{height:100px;display:flex;align-items:center;justify-content:center;font-size:2.7rem;}
+.mom-body{padding:8px 11px;}
+.mom-t{font-weight:800;font-size:.8rem;margin-bottom:1px;}
+.mom-m{font-size:.63rem;color:var(--text3);font-weight:600;}
+
+/* BIRTHDAY BANNER */
+.bday-banner{
+  background:linear-gradient(135deg,rgba(236,72,153,.22),rgba(168,85,247,.18));
+  backdrop-filter:blur(28px);border:1px solid rgba(244,114,182,.32);
+  border-radius:20px;padding:18px 22px;margin-bottom:24px;
+  display:flex;align-items:center;gap:14px;
+  box-shadow:var(--inset),0 4px 20px rgba(236,72,153,.18);
+  animation:fu .6s ease both;
+}
+.bday-icon{font-size:2.6rem;flex-shrink:0;}
+.bday-info{flex:1;}
+.bday-title{font-weight:900;font-size:1rem;font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;margin-bottom:4px;}
+.bday-sub{font-size:.78rem;color:var(--text2);font-weight:600;}
+.bday-cd{text-align:right;flex-shrink:0;}
+.bday-days{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:2.1rem;background:linear-gradient(135deg,#f472b6,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;}
+.bday-dlbl{font-size:.58rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+
+/* BIRTHDAY PAGE */
+.bday-w{max-width:700px;margin:0 auto;padding:22px 18px 40px;}
+.pg-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.pg-title{font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:1.4rem;font-weight:900;background:linear-gradient(135deg,#fff,#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.pg-sub{font-size:.73rem;color:var(--text3);font-weight:600;margin-top:2px;}
+.bday-cards{display:flex;flex-direction:column;gap:10px;}
+.bdc{
+  background:rgba(255,255,255,.082);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.16);
+  border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:14px;
+  transition:all .22s;box-shadow:var(--inset),0 4px 16px rgba(0,0,0,.14);
+  position:relative;overflow:hidden;
+}
+.bdc::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 100% 50%,rgba(192,132,252,.07),transparent 55%);pointer-events:none;}
+.bdc:hover{transform:translateY(-2px);box-shadow:var(--shadow),var(--inset);}
+.bdc.today{border-color:rgba(244,114,182,.45);background:linear-gradient(135deg,rgba(236,72,153,.18),rgba(168,85,247,.14));}
+.bdc.soon{border-color:rgba(192,132,252,.32);background:linear-gradient(135deg,rgba(168,85,247,.14),rgba(99,102,241,.10));}
+.bdc-av{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;border:2px solid rgba(255,255,255,.18);box-shadow:0 0 14px rgba(192,132,252,.22);}
+.bdc-info{flex:1;}
+.bdc-name{font-weight:900;font-size:.94rem;font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;margin-bottom:2px;}
+.bdc-date{font-size:.72rem;color:var(--text2);font-weight:600;}
+.bdc-age{font-size:.68rem;color:var(--text3);font-weight:600;}
+.bdc-right{text-align:right;flex-shrink:0;}
+.bdc-days{font-family:'Pacifico','Comic Sans MS','Segoe Script',cursive;font-size:1.6rem;line-height:1;}
+.bdc-dlbl{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;}
+.bdc-cd-mini{font-size:.65rem;font-weight:700;color:var(--text2);margin-top:2px;}
+/* countdown realtime in bday */
+.bdc-cd-row{display:flex;gap:6px;margin-top:8px;}
+.bdc-cu{text-align:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:9px;padding:5px 8px;min-width:42px;}
+.bdc-cn{font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-weight:900;font-size:1rem;line-height:1;background:linear-gradient(135deg,#f0abfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.bdc-cl{font-size:.5rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;}
+
+/* CHAT */
+#page-chat{overflow:hidden;}
+.chat-layout{display:flex;height:100%;}
+.chat-sb{width:205px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.036);display:flex;flex-direction:column;padding:11px 7px;}
+.sb-title{font-size:.6rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:0 5px;margin-bottom:7px;}
+.sm{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:11px;cursor:pointer;transition:all .18s;margin-bottom:2px;}
+.sm:hover{background:rgba(255,255,255,.07);}
+.sm.active{background:rgba(192,132,252,.11);border:1px solid rgba(192,132,252,.16);}
+.sm-av{width:29px;height:29px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;border:2px solid rgba(255,255,255,.12);}
+.sm-n{font-size:.74rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.sm-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sm-dot.on{background:#4ade80;box-shadow:0 0 5px #4ade80;}
+.sb-feats{margin-top:auto;display:flex;flex-direction:column;gap:4px;}
+.sf{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.042);border:1px solid rgba(255,255,255,.07);transition:all .18s;font-size:.72rem;font-weight:700;color:var(--text2);}
+.sf:hover{background:rgba(192,132,252,.11);border-color:rgba(192,132,252,.18);}
+.chat-main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.chat-hdr{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.036);}
+.chat-hdr-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.95rem;border:2px solid rgba(255,255,255,.15);}
+.chat-hdr-n{font-weight:800;font-size:.86rem;}
+.chat-hdr-s{font-size:.64rem;color:var(--text3);font-weight:600;}
+.chat-hdr-acts{margin-left:auto;display:flex;gap:4px;}
+.ch-act{background:rgba(255,255,255,.062);border:1px solid rgba(255,255,255,.10);border-radius:8px;padding:4px 9px;color:var(--text2);font-size:.7rem;font-weight:700;cursor:pointer;transition:all .18s;}
+.ch-act:hover{background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.20);color:#fff;}
+.chat-msgs{flex:1;overflow-y:auto;padding:11px 14px;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin;scrollbar-color:rgba(192,132,252,.10) transparent;}
+.chat-msgs::-webkit-scrollbar{width:3px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(192,132,252,.14);border-radius:3px;}
+.msg-grp{margin-bottom:4px;}
+.msg-row{display:flex;align-items:flex-end;gap:7px;margin-bottom:1px;}
+.msg-grp.me .msg-row{flex-direction:row-reverse;}
+.msg-av{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;border:1.5px solid rgba(255,255,255,.11);}
+.msg-av.ph{visibility:hidden;}
+.msg-content{max-width:66%;}
+.msg-grp.me .msg-content{align-items:flex-end;display:flex;flex-direction:column;}
+.msg-name{font-size:.6rem;font-weight:800;color:var(--text3);margin-bottom:2px;padding-left:3px;}
+.msg-grp.me .msg-name{display:none;}
+.msg-quote{background:rgba(255,255,255,.055);border-left:2px solid var(--violet);border-radius:8px 8px 0 0;padding:4px 8px;font-size:.64rem;color:var(--text2);font-weight:600;border-bottom:none;margin-bottom:-1px;}
+.msg-quote strong{color:var(--pink);display:block;font-size:.59rem;}
+.msg-bub{background:rgba(255,255,255,.10);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.17);border-radius:16px 16px 16px 5px;padding:8px 12px;font-size:.83rem;font-weight:600;line-height:1.5;position:relative;cursor:pointer;transition:all .16s;box-shadow:0 2px 10px rgba(0,0,0,.16),var(--inset);word-break:break-word;}
+.msg-grp.me .msg-bub{background:linear-gradient(135deg,rgba(147,51,234,.30),rgba(236,72,153,.23));border:1px solid rgba(192,132,252,.30);border-radius:16px 16px 5px 16px;box-shadow:0 2px 10px rgba(147,51,234,.16),var(--inset);}
+.msg-bub.hq{border-radius:0 16px 16px 5px;}.msg-grp.me .msg-bub.hq{border-radius:16px 0 5px 16px;}
+.msg-bub.stk{font-size:2.5rem;line-height:1;padding:2px 0;background:none;border:none;box-shadow:none;backdrop-filter:none;}
+.react-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
+.msg-grp.me .react-row{justify-content:flex-end;}
+.rb2{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:50px;padding:2px 6px;font-size:.68rem;cursor:pointer;transition:all .16s;display:flex;align-items:center;gap:2px;backdrop-filter:blur(8px);}
+.rb2:hover{background:rgba(192,132,252,.16);}
+.rb2.mine{background:rgba(147,51,234,.20);border-color:rgba(192,132,252,.34);}
+.rc{font-size:.6rem;font-weight:800;color:var(--text2);}
+.msg-meta{display:flex;align-items:center;gap:4px;margin-top:1px;}
+.msg-grp.me .msg-meta{justify-content:flex-end;}
+.msg-time{font-size:.57rem;color:var(--text3);font-weight:600;}
+.msg-acts{display:none;gap:2px;}
+.msg-meta:hover .msg-acts{display:flex;}
+.ma{background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.10);border-radius:6px;padding:2px 5px;font-size:.6rem;cursor:pointer;transition:all .13s;color:var(--text2);}
+.ma:hover{background:rgba(192,132,252,.14);color:#fff;}
+.ma.del:hover{background:rgba(251,113,133,.11);color:#fb7185;}
+.ep{position:fixed;z-index:500;background:rgba(10,0,26,.94);backdrop-filter:blur(26px);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:8px;display:flex;gap:3px;flex-wrap:wrap;max-width:185px;box-shadow:0 10px 32px rgba(0,0,0,.38),var(--inset);animation:epop .18s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes epop{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+.ee{font-size:1.18rem;cursor:pointer;padding:4px;border-radius:7px;transition:all .13s;}
+.ee:hover{background:rgba(255,255,255,.10);transform:scale(1.2);}
+#reply-bar{padding:6px 14px;background:rgba(255,255,255,.045);border-top:1px solid rgba(255,255,255,.07);display:none;align-items:center;gap:7px;}
+#reply-bar.on{display:flex;}
+.rb-txt{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(192,132,252,.16);border-radius:9px;padding:5px 9px;font-size:.72rem;color:var(--text2);font-weight:600;}
+.rb-txt strong{color:var(--pink);}
+.rb-x{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.92rem;}
+.rb-x:hover{color:#fb7185;}
+#stk-panel{padding:10px 14px;border-top:1px solid rgba(255,255,255,.07);background:rgba(8,0,20,.55);backdrop-filter:blur(16px);display:none;}
+#stk-panel.on{display:block;}
+.sp-cats{display:flex;gap:5px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none;}
+.sp-cats::-webkit-scrollbar{display:none;}
+.sp-cat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:50px;padding:3px 9px;font-size:.67rem;font-weight:700;cursor:pointer;transition:all .16s;white-space:nowrap;}
+.sp-cat.active,.sp-cat:hover{background:rgba(192,132,252,.17);border-color:rgba(192,132,252,.26);color:#fff;}
+.sp-grid{display:flex;gap:5px;flex-wrap:wrap;}
+.sp-i{font-size:1.55rem;cursor:pointer;padding:4px;border-radius:8px;transition:all .16s;line-height:1;}
+.sp-i:hover{background:rgba(255,255,255,.08);transform:scale(1.2);}
+.chat-inp-area{padding:8px 14px;background:rgba(255,255,255,.036);border-top:1px solid rgba(255,255,255,.07);}
+.ci-row{display:flex;align-items:center;gap:7px;}
+.ci-tools{display:flex;gap:3px;}
+.ci-tool{background:rgba(255,255,255,.072);border:1px solid rgba(255,255,255,.10);border-radius:9px;width:31px;height:31px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;transition:all .16s;}
+.ci-tool:hover,.ci-tool.on{background:rgba(192,132,252,.15);border-color:rgba(192,132,252,.24);}
+.ci-wrap{flex:1;}
+.ci-inp{width:100%;background:rgba(255,255,255,.082);border:1px solid rgba(255,255,255,.13);border-radius:20px;padding:8px 14px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-size:.82rem;font-weight:600;outline:none;transition:all .2s;resize:none;max-height:90px;overflow-y:auto;}
+.ci-inp::placeholder{color:rgba(255,255,255,.22);}
+.ci-inp:focus{background:rgba(255,255,255,.11);border-color:rgba(192,132,252,.40);box-shadow:0 0 0 3px rgba(192,132,252,.08);}
+.ci-send{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#ec4899);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;transition:all .2s;box-shadow:0 4px 14px rgba(147,51,234,.36);flex-shrink:0;}
+.ci-send:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(147,51,234,.54);}
+.typing-ind{padding:3px 14px;font-size:.63rem;color:var(--text3);font-weight:600;min-height:17px;}
+.td{width:4px;height:4px;border-radius:50%;background:var(--violet);display:inline-block;animation:tdot 1.2s ease-in-out infinite;}
+.td:nth-child(2){animation-delay:.2s;}.td:nth-child(3){animation-delay:.4s;}
+@keyframes tdot{0%,80%,100%{transform:scale(.7);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+
+/* KENANGAN */
+.ken-w{max-width:830px;margin:0 auto;padding:20px 18px 38px;}
+
+/* Photo upload drop zone */
+.photo-drop{
+  border:2px dashed rgba(192,132,252,.35);border-radius:14px;
+  cursor:pointer;transition:all .22s;overflow:hidden;
+  background:rgba(255,255,255,.04);
+  min-height:100px;
+}
+.photo-drop:hover{border-color:rgba(192,132,252,.65);background:rgba(192,132,252,.06);}
+.photo-drop.has-photo{border-style:solid;border-color:rgba(192,132,252,.4);}
+.photo-drop-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:4px;}
+.pd-icon{font-size:1.8rem;}
+.pd-txt{font-size:.78rem;font-weight:700;color:var(--text2);}
+.pd-sub{font-size:.64rem;color:var(--text3);font-weight:600;}
+.photo-preview-img{width:100%;max-height:160px;object-fit:cover;display:block;border-radius:11px;}
+.photo-remove-btn{
+  position:absolute;top:7px;right:7px;
+  background:rgba(0,0,0,.55);border:none;border-radius:50%;
+  width:26px;height:26px;color:#fff;font-size:.75rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);transition:all .15s;
+}
+.photo-remove-btn:hover{background:rgba(251,113,133,.7);}
+.photo-wrap{position:relative;}
+
+/* Ken card with photo */
+.ken-img-photo{height:150px;overflow:hidden;position:relative;}
+.ken-img-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
+.ken-card:hover .ken-img-photo img{transform:scale(1.04);}
+.ken-card-actions{display:flex;gap:5px;align-items:center;}
+.ken-like-btn{background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--text3);transition:all .15s;padding:2px 5px;border-radius:6px;}
+.ken-like-btn:hover{background:rgba(251,113,133,.12);color:#fb7185;}
+.ken-like-btn.liked{color:#fb7185;}
+.ken-del-btn{background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--text3);transition:all .15s;padding:2px 5px;border-radius:6px;}
+.ken-del-btn:hover{background:rgba(251,113,133,.12);color:#fb7185;}
+.add-btn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(147,51,234,.24),rgba(236,72,153,.16));border:1px solid rgba(192,132,252,.24);border-radius:50px;padding:7px 15px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;transition:all .2s;}
+.add-btn:hover{background:linear-gradient(135deg,#9333ea,#ec4899);box-shadow:0 4px 16px rgba(147,51,234,.36);}
+.ken-grid{columns:2;gap:10px;}
+.ken-card{break-inside:avoid;margin-bottom:10px;border-radius:16px;overflow:hidden;cursor:pointer;transition:all .26s;background:rgba(255,255,255,.08);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.16);box-shadow:var(--inset),0 4px 16px rgba(0,0,0,.16);}
+.ken-card:hover{transform:translateY(-3px);box-shadow:var(--shadow),var(--inset);}
+.ken-img{height:118px;display:flex;align-items:center;justify-content:center;font-size:3rem;}
+.ken-body{padding:10px 12px;}
+.ken-t{font-weight:800;font-size:.84rem;margin-bottom:2px;}
+.ken-c{font-size:.7rem;color:var(--text2);font-weight:600;line-height:1.44;margin-bottom:5px;}
+.ken-ft{display:flex;align-items:center;justify-content:space-between;}
+.ken-d{font-size:.61rem;color:var(--text3);font-weight:600;}.ken-l{font-size:.76rem;}
+
+/* WISHLIST */
+.wish-w{max-width:640px;margin:0 auto;padding:20px 18px 38px;}
+.member-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:15px;}
+.mt{background:rgba(255,255,255,.072);border:1px solid rgba(255,255,255,.11);border-radius:50px;padding:5px 12px;font-weight:800;font-size:.74rem;cursor:pointer;transition:all .16s;backdrop-filter:blur(8px);}
+.mt:hover{background:rgba(255,255,255,.11);}
+.mt.active{background:linear-gradient(135deg,rgba(147,51,234,.30),rgba(236,72,153,.20));border-color:rgba(192,132,252,.36);color:#fff;}
+.wi-list{display:flex;flex-direction:column;gap:7px;}
+.wi{background:rgba(255,255,255,.072);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.13);border-radius:13px;padding:10px 13px;display:flex;align-items:center;gap:10px;transition:all .2s;box-shadow:var(--inset),0 2px 10px rgba(0,0,0,.12);}
+.wi:hover{border-color:rgba(255,255,255,.20);transform:translateY(-1px);}
+.wi.done{opacity:.5;}
+.wi-em{font-size:1.5rem;flex-shrink:0;}
+.wi-i{flex:1;min-width:0;}
+.wi-n{font-weight:800;font-size:.83rem;margin-bottom:1px;}
+.wi.done .wi-n{text-decoration:line-through;color:var(--text3);}
+.wi-pr{font-size:.68rem;color:var(--pink);font-weight:700;}
+.wi-no{font-size:.64rem;color:var(--text3);font-weight:600;}
+.wi-cb{width:20px;height:20px;border-radius:6px;border:2px solid rgba(255,255,255,.18);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .16s;flex-shrink:0;}
+.wi.done .wi-cb{background:linear-gradient(135deg,#9333ea,#ec4899);border-color:transparent;}
+.wi-cb::after{content:'✓';color:#fff;font-size:.66rem;font-weight:900;opacity:0;transition:opacity .16s;}
+.wi.done .wi-cb::after{opacity:1;}
+
+/* MOOD */
+.mood-w{max-width:640px;margin:0 auto;padding:20px 18px 38px;}
+.me-grid{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+.meb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 12px;border-radius:14px;cursor:pointer;background:rgba(255,255,255,.062);border:2px solid transparent;transition:all .18s;backdrop-filter:blur(10px);}
+.meb:hover{background:rgba(255,255,255,.11);transform:scale(1.07);}
+.meb.sel{background:linear-gradient(135deg,rgba(147,51,234,.24),rgba(236,72,153,.17));border-color:rgba(192,132,252,.45);transform:scale(1.09);}
+.me-icon{font-size:1.65rem;}.mel{font-size:.55rem;font-weight:800;color:var(--text3);}
+.fm-grid{display:flex;flex-direction:column;gap:6px;}
+.fmc{background:rgba(255,255,255,.062);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.10);border-radius:13px;padding:9px 12px;display:flex;align-items:center;gap:9px;box-shadow:var(--inset);}
+.fav{width:33px;height:33px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.92rem;flex-shrink:0;border:2px solid rgba(255,255,255,.12);}
+.fn{font-weight:800;font-size:.8rem;margin-bottom:1px;}.ft{font-size:.6rem;color:var(--text3);font-weight:600;}.fe{font-size:1.5rem;margin-left:auto;}
+
+/* PLAN */
+.plan-w{max-width:610px;margin:0 auto;padding:20px 18px 38px;}
+.pc{background:rgba(255,255,255,.072);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);border-radius:16px;padding:12px;margin-bottom:9px;transition:all .18s;box-shadow:var(--inset),0 4px 16px rgba(0,0,0,.12);}
+.pc:hover{transform:translateY(-2px);box-shadow:var(--shadow),var(--inset);}
+.pt{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.pi{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.pn{font-weight:800;font-size:.86rem;margin-bottom:1px;}.pd2{font-size:.65rem;color:var(--pink);font-weight:700;}
+.pdsc{font-size:.73rem;color:var(--text2);font-weight:600;line-height:1.46;margin-bottom:7px;}
+.pf{display:flex;align-items:center;gap:4px;}
+.pv{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;border:2px solid rgba(8,0,26,.52);margin-left:-4px;}
+.pv:first-child{margin-left:0;}
+.pvc{font-size:.64rem;color:var(--text3);font-weight:700;margin-left:4px;}
+.vb{margin-left:auto;background:rgba(255,255,255,.072);border:1px solid rgba(255,255,255,.11);border-radius:50px;padding:4px 11px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-weight:700;font-size:.68rem;cursor:pointer;transition:all .16s;}
+.vb:hover,.vb.voted{background:linear-gradient(135deg,#9333ea,#ec4899);border-color:transparent;box-shadow:0 2px 9px rgba(147,51,234,.36);}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.46);backdrop-filter:blur(8px);}
+.modal-ov.open{display:flex;}
+.modal-box{background:rgba(12,0,30,.92);backdrop-filter:blur(52px);border:1px solid rgba(255,255,255,.17);border-radius:21px;padding:24px;width:320px;box-shadow:0 26px 70px rgba(0,0,0,.48),var(--inset);animation:fuM .45s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes fuM{from{opacity:0;transform:scale(.9) translateY(18px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-title{font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:1.05rem;font-weight:900;margin-bottom:13px;}
+.modal-fld{display:flex;flex-direction:column;gap:4px;margin-bottom:11px;}
+.modal-lbl{font-size:.63rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);}
+.modal-inp{background:rgba(255,255,255,.072);border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:9px 13px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-size:.84rem;font-weight:600;outline:none;transition:all .2s;width:100%;}
+.modal-inp:focus{border-color:rgba(192,132,252,.46);box-shadow:0 0 0 3px rgba(192,132,252,.08);}
+.modal-ta{height:72px;resize:none;}
+.modal-row{display:flex;gap:7px;}
+.modal-btn{flex:1;padding:10px;border:none;border-radius:10px;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-weight:800;font-size:.84rem;cursor:pointer;transition:all .18s;}
+.modal-btn.p{background:linear-gradient(135deg,#9333ea,#ec4899);color:#fff;box-shadow:0 3px 14px rgba(147,51,234,.36);}
+.modal-btn.p:hover{transform:translateY(-1px);}
+.modal-btn.c{background:rgba(255,255,255,.062);color:var(--text2);border:1px solid rgba(255,255,255,.10);}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(90px);background:linear-gradient(135deg,rgba(147,51,234,.96),rgba(236,72,153,.96));backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.17);border-radius:50px;padding:8px 18px;font-weight:700;font-size:.78rem;z-index:9999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:var(--shadow);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* MY BIRTHDAY HERO */
+.my-bday-hero{
+  background:linear-gradient(135deg,rgba(168,85,247,.22),rgba(236,72,153,.18),rgba(99,102,241,.15));
+  backdrop-filter:blur(36px);border:1px solid rgba(244,114,182,.38);
+  border-radius:24px;padding:28px 24px;margin-bottom:10px;position:relative;overflow:hidden;
+  box-shadow:0 8px 36px rgba(168,85,247,.22),inset 0 1px 0 rgba(255,255,255,.18);
+}
+.my-bday-hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 80% 20%,rgba(244,114,182,.14),transparent 55%),
+             radial-gradient(circle at 20% 80%,rgba(139,92,246,.14),transparent 55%);
+  pointer-events:none;}
+.mbh-top{display:flex;align-items:center;gap:18px;margin-bottom:20px;}
+.mbh-av{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:1.9rem;flex-shrink:0;border:3px solid rgba(255,255,255,.22);
+  box-shadow:0 0 20px rgba(192,132,252,.35);position:relative;z-index:1;}
+.mbh-info{flex:1;position:relative;z-index:1;}
+.mbh-name{font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:1.3rem;font-weight:900;margin-bottom:3px;}
+.mbh-date{font-size:.82rem;color:rgba(255,255,255,.7);font-weight:600;}
+.mbh-age{font-size:.72rem;color:var(--pink);font-weight:700;margin-top:2px;}
+.mbh-today{display:inline-flex;align-items:center;gap:5px;
+  background:linear-gradient(135deg,#ec4899,#f472b6);border-radius:50px;
+  padding:5px 14px;font-size:.78rem;font-weight:800;margin-top:8px;
+  box-shadow:0 3px 12px rgba(236,72,153,.45);}
+.mbh-cd-title{font-size:.64rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.45);margin-bottom:10px;position:relative;z-index:1;}
+.mbh-cd-row{display:flex;gap:10px;position:relative;z-index:1;}
+.mbh-cu{
+  flex:1;text-align:center;
+  background:rgba(255,255,255,.10);backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px 6px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14);
+}
+.mbh-cn{font-family:'Syne','Arial Black',sans-serif;font-weight:900;font-size:1.7rem;line-height:1;
+  background:linear-gradient(135deg,#f0abfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.mbh-cl{font-size:.58rem;font-weight:800;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+.mbh-progress{margin-top:16px;position:relative;z-index:1;}
+.mbh-prog-lbl{display:flex;justify-content:space-between;font-size:.66rem;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:6px;}
+.mbh-prog-bar{height:6px;background:rgba(255,255,255,.10);border-radius:50px;overflow:hidden;}
+.mbh-prog-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,#9333ea,#ec4899,#f472b6);
+  transition:width .8s cubic-bezier(.34,1.2,.64,1);}
+
+/* BIRTHDAY CONFETTI (today) */
+@keyframes confetti{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+.conf{position:fixed;top:-20px;z-index:9998;width:8px;height:8px;border-radius:2px;animation:confetti linear forwards;pointer-events:none;}
+
+/* ===================== MOBILE RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  /* Remove browser frame on mobile - full screen */
+  .browser-frame{margin:0;border-radius:0;border:none;}
+  #app-view{inset:0;}
+
+  /* Login card - single column */
+  .lc{max-width:100%;border-radius:20px;padding:28px 22px;}
+  .brand-strip{padding:12px 18px;}
+  .brand-logo{font-size:1.2rem;}
+
+  /* Nav - horizontal scroll */
+  nav{padding:6px 12px;gap:8px;flex-wrap:nowrap;}
+  .nav-logo{font-size:1.1rem;flex-shrink:0;}
+  .nav-links{overflow-x:auto;scrollbar-width:none;flex:1;justify-content:flex-start;gap:1px;}
+  .nav-links::-webkit-scrollbar{display:none;}
+  .nb{font-size:.65rem;padding:4px 8px;white-space:nowrap;}
+  .nav-name{display:none;}
+  .out-btn{font-size:.62rem;padding:3px 8px;white-space:nowrap;}
+
+  /* Home */
+  .hw{padding:18px 14px 32px;}
+  .home-hero{padding:10px 0 22px;}
+  .h-title{font-size:clamp(1.6rem,7vw,2.4rem);}
+  .h-sub{font-size:.82rem;}
+  .stats-row{gap:7px;margin:20px 0 24px;}
+  .s-pill{padding:9px 14px;}
+  .s-num{font-size:1.25rem;}
+  .mom-card{flex:0 0 150px;}
+  .mom-img{height:85px;font-size:2.2rem;}
+
+  /* Birthday banner */
+  .bday-banner{padding:14px 16px;gap:10px;}
+  .bday-icon{font-size:1.9rem;}
+  .bday-days{font-size:1.6rem;}
+
+  /* Chat - hide sidebar on mobile, show toggle */
+  .chat-layout{position:relative;}
+  .chat-sb{
+    position:absolute;left:0;top:0;bottom:0;z-index:20;
+    transform:translateX(-100%);transition:transform .3s ease;
+    width:240px;box-shadow:4px 0 20px rgba(0,0,0,.3);
+  }
+  .chat-sb.open{transform:translateX(0);}
+  .chat-main{width:100%;}
+  .chat-hdr{padding:8px 12px;}
+  .chat-sb-toggle{
+    display:flex;align-items:center;justify-content:center;
+    width:30px;height:30px;background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.15);border-radius:8px;
+    cursor:pointer;font-size:1rem;flex-shrink:0;margin-right:4px;
+  }
+  .chat-msgs{padding:10px 12px;}
+  .msg-content{max-width:80%;}
+  .chat-inp-area{padding:7px 10px;}
+
+  /* Kenangan 1 column */
+  .ken-grid{columns:1;}
+  .ken-w{padding:16px 14px 32px;}
+
+  /* Wishlist */
+  .wish-w{padding:16px 14px 32px;}
+  .member-tabs{gap:4px;}
+  .mt{font-size:.7rem;padding:4px 10px;}
+
+  /* Mood */
+  .mood-w{padding:16px 14px 32px;}
+  .me-grid{gap:5px;}
+  .meb{padding:9px 10px;}
+  .me-icon{font-size:1.5rem;}
+
+  /* Plan */
+  .plan-w{padding:16px 14px 32px;}
+
+  /* Birthday page */
+  .bday-w{padding:16px 14px 32px;max-width:100%;}
+  .mbh-cd-row{gap:6px;}
+  .mbh-cu{padding:9px 4px;}
+  .mbh-cn{font-size:1.35rem;}
+  .bdc{padding:12px 13px;gap:10px;}
+
+  /* Modal */
+  .modal-box{width:calc(100vw - 32px);padding:20px 18px;}
+
+  /* Page wrap full height */
+  .page-wrap{height:calc(100% - 44px);}
+}
+
+@media (max-width: 480px) {
+  .nav-logo{display:none;}
+  .h-title{font-size:clamp(1.4rem,8vw,2rem);}
+  .stats-row{gap:6px;}
+  .s-pill{padding:8px 11px;}
+  .s-num{font-size:1.1rem;}
+  .s-lbl{font-size:.55rem;}
+  .bday-banner{flex-wrap:wrap;}
+  .bday-cd{width:100%;text-align:left;display:flex;align-items:center;gap:8px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SHARED BACKGROUND ===== -->
+<div id="bg-layer">
+  <div class="sky-mtn" id="sky-mtn"></div>
+  <div class="sky-app" id="sky-app"></div>
+  <div class="blb b1"></div><div class="blb b2"></div><div class="blb b3"></div>
+  <div class="blb b4"></div><div class="blb b5"></div>
+
+  <!-- Mountain scene -->
+  <div id="mtn-layer">
+    <div class="moon-el"></div>
+    <div class="aurora au1"></div><div class="aurora au2"></div>
+
+    <!-- Far mountains -->
+    <svg class="mtn-far" viewBox="0 0 1440 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="mf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b1078" stop-opacity=".52"/><stop offset="100%" stop-color="#18003c" stop-opacity=".82"/></linearGradient></defs>
+      <path fill="url(#mf)" d="M0,400 L0,280 L80,212 L160,262 L240,172 L320,232 L400,142 L480,202 L560,112 L640,172 L720,92 L800,162 L880,102 L960,177 L1040,122 L1120,187 L1200,132 L1280,197 L1360,147 L1440,202 L1440,400 Z"/>
+    </svg>
+    <!-- Mid mountains with snow -->
+    <svg class="mtn-mid" viewBox="0 0 1440 380" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="mm" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2a095a" stop-opacity=".72"/><stop offset="100%" stop-color="#10002e" stop-opacity=".94"/></linearGradient>
+        <linearGradient id="ms" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ede9fe" stop-opacity=".52"/><stop offset="35%" stop-color="#c084fc" stop-opacity=".14"/><stop offset="100%" stop-color="transparent" stop-opacity="0"/></linearGradient>
+      </defs>
+      <path fill="url(#mm)" d="M0,380 L0,322 L60,252 L120,302 L200,192 L280,262 L360,152 L440,222 L520,122 L600,197 L680,82 L742,147 L802,62 L862,142 L922,87 L982,162 L1062,97 L1142,172 L1222,112 L1302,182 L1382,132 L1440,167 L1440,380 Z"/>
+      <path fill="url(#ms)" d="M802,62 L782,104 L822,102 Z M680,82 L657,127 L703,124 Z M922,87 L900,130 L944,127 Z M520,122 L497,167 L543,164 Z M1062,97 L1037,142 L1087,139 Z M360,152 L337,197 L383,194 Z"/>
+    </svg>
+    <!-- Near mountains with snow -->
+    <svg class="mtn-near" viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="mn" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1c0746" stop-opacity=".90"/><stop offset="100%" stop-color="#09001e" stop-opacity="1"/></linearGradient>
+        <linearGradient id="ns" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f3e8ff" stop-opacity=".54"/><stop offset="42%" stop-color="#d8b4fe" stop-opacity=".12"/><stop offset="100%" stop-color="transparent" stop-opacity="0"/></linearGradient>
+      </defs>
+      <path fill="url(#mn)" d="M0,320 L0,282 L80,242 L160,272 L260,197 L360,252 L460,172 L540,232 L622,152 L702,212 L762,142 L822,212 L902,162 L982,227 L1062,177 L1162,242 L1262,187 L1362,247 L1440,207 L1440,320 Z"/>
+      <path fill="url(#ns)" d="M762,142 L740,180 L784,177 Z M622,152 L598,194 L646,191 Z M902,162 L878,202 L926,199 Z M460,172 L434,217 L486,214 Z M1062,177 L1037,220 L1087,217 Z"/>
+    </svg>
+    <!-- Foreground -->
+    <svg class="mtn-fg" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#04001a" d="M0,160 L0,102 Q182,42 362,82 Q542,117 722,62 Q902,12 1082,57 Q1262,97 1440,52 L1440,160 Z"/>
+    </svg>
+    <div class="mist"></div><div class="mist2"></div>
+    <div id="bokeh"></div>
+  </div>
+</div>
+
+<div id="bub-layer"></div>
+<canvas id="stars"></canvas>
+<div id="grain"></div>
+
+<!-- ===================== LOGIN VIEW ===================== -->
+<div id="login-view">
+  <div class="brand-strip">
+    <div class="brand-logo">Crazy Squad 💜</div>
+    <div class="brand-tag">Private Space</div>
+  </div>
+  <div class="lc">
+    <div class="cg1"></div><div class="cg2"></div>
+    <div class="l-logo">Crazy Squad 💜</div>
+    <div class="l-sub">Masukkan data kamu untuk masuk ke ruang privat squad ✨</div>
+
+    <div class="wj">
+      <div class="wj-lbl">Sudah Bergabung</div>
+      <div class="wj-chips" id="wj-chips"><div style="font-size:.68rem;color:rgba(255,255,255,.28);font-style:italic;">Jadilah yang pertama! 🥳</div></div>
+    </div>
+
+    <div class="fld">
+      <div class="lbl">Nama Lengkap</div>
+      <div class="inp-w">
+        <span class="i-ico">👤</span>
+        <input class="inp" id="l-name" type="text" placeholder="Nama lengkap kamu..." autocomplete="off" oninput="previewUname()" onkeydown="if(event.key==='Enter')document.getElementById('l-dob').focus()">
+      </div>
+      <div class="inp-hint auto" id="l-preview"></div>
+    </div>
+
+    <div class="fld">
+      <div class="lbl">Tanggal Lahir</div>
+      <div class="inp-w">
+        <span class="i-ico">🎂</span>
+        <input class="inp" id="l-dob" type="date" style="padding-left:38px" onkeydown="if(event.key==='Enter')document.getElementById('l-pw').focus()">
+      </div>
+      <div class="inp-hint auto" id="l-dob-hint"></div>
+    </div>
+
+    <div class="fld">
+      <div class="lbl">Password Squad</div>
+      <div class="inp-w">
+        <span class="i-ico">🔐</span>
+        <input class="inp" id="l-pw" type="password" placeholder="Password rahasia..." autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="eye-btn" onclick="toggleEye()">👁️</button>
+      </div>
+      <div class="inp-hint err" id="l-err"></div>
+    </div>
+
+    <button class="l-btn" onclick="doLogin()">Masuk ke Squad 💜</button>
+    <div class="remember-row">
+      <input type="checkbox" class="remember-cb" id="remember-me" checked>
+      <label class="remember-lbl" for="remember-me">Ingat saya di perangkat ini</label>
+    </div>
+    <div class="l-hint">Website privat Crazy Squad 🔐 · Hanya untuk squad SMAN 8!</div>
+    <div class="scene-q">"Di puncak manapun, kita selalu ada buat satu sama lain 💜"</div>
+  </div>
+</div>
+
+<!-- ===================== APP VIEW ===================== -->
+<div id="app-view">
+  <div class="browser-frame">
+    <div class="bf-chrome">
+      <div class="bf-dots"><div class="bf-dot"></div><div class="bf-dot"></div><div class="bf-dot"></div></div>
+      <div class="bf-bar"><span class="bf-lock">🔒</span><span class="bf-url" id="bf-url">crazy-squad.private / beranda</span></div>
+    </div>
+    <div class="bf-inner">
+      <nav>
+        <div class="nav-logo">Crazy Squad 💜</div>
+        <div class="nav-links">
+          <button class="nb active" onclick="goPage('home',this)">🏠 Home</button>
+          <button class="nb" onclick="goPage('chat',this)">💬 Chat</button>
+          <button class="nb" onclick="goPage('kenangan',this)">📸 Kenangan</button>
+          <button class="nb" onclick="goPage('wishlist',this)">🌟 Wishlist</button>
+          <button class="nb" onclick="goPage('mood',this)">💭 Mood</button>
+          <button class="nb" onclick="goPage('plan',this)">📅 Plan</button>
+          <button class="nb" onclick="goPage('birthday',this)">🎂 Ultah</button>
+        </div>
+        <div class="nav-r">
+          <div class="nav-av" id="nav-av">✨</div>
+          <div class="nav-name" id="nav-name">-</div>
+          <button class="out-btn" onclick="doLogout()">Keluar</button>
+        </div>
+      </nav>
+      <div class="page-wrap">
+
+        <!-- HOME -->
+        <div class="page active" id="page-home">
+          <div class="hw">
+            <div class="home-hero">
+              <div class="h-badge">✨ Crazy Squad Only</div>
+              <div class="h-title" id="home-title">Halo, Gengs! 💜</div>
+              <div class="h-sub">Ini ruang kita sendiri. Penuh kenangan, tawa, dan cinta. 🌸</div>
+            </div>
+            <div class="stats-row">
+              <div class="s-pill"><div class="s-num" id="stat-members">0</div><div class="s-lbl">Sahabat</div></div>
+              <div class="s-pill"><div class="s-num" id="stat-ken">0</div><div class="s-lbl">Kenangan</div></div>
+              <div class="s-pill"><div class="s-num" id="stat-plan">0</div><div class="s-lbl">Plan Aktif</div></div>
+              <div class="s-pill"><div class="s-num" id="stat-msgs">0</div><div class="s-lbl">Pesan</div></div>
+            </div>
+            <!-- birthday banner -->
+            <div id="bday-banner-home"></div>
+            <!-- event countdown — only shown if event exists -->
+            <div id="event-cd-wrap"></div>
+            <div class="mom-lbl">📸 Momen Terbaru</div>
+            <div class="mom-row" id="home-mom-row">
+              <div style="color:var(--text3);font-size:.8rem;padding:20px;font-weight:600;">Belum ada kenangan. Tambah di menu Kenangan! 📸</div>
+            </div>
+            <div style="margin-top:16px" id="members-home-grid"></div>
+          </div>
+        </div>
+
+        <!-- CHAT -->
+        <div class="page" id="page-chat" style="height:100%;">
+          <div class="chat-layout" style="height:100%;">
+            <div class="chat-sb" id="chat-sb-el">
+              <div class="sb-title">Squad 💜</div>
+              <div class="sm active">
+                <div class="sm-av" style="background:linear-gradient(135deg,#9333ea,#ec4899)">💜</div>
+                <div class="sm-n">Crazy Squad</div>
+                <div class="sm-dot on"></div>
+              </div>
+              <div style="margin:9px 0 5px"><div class="sb-title">Online</div></div>
+              <div id="sb-members"></div>
+              <div class="sb-feats">
+                <div class="sf" onclick="toggleStkPanel()"><span>🎭</span><span>Sticker</span></div>
+                <div class="sf" onclick="goPage('birthday',document.querySelectorAll('.nb')[6])"><span>🎂</span><span>Ultah Squad</span></div>
+              </div>
+            </div>
+            <div class="chat-main">
+              <div class="chat-hdr">
+                <div class="chat-sb-toggle" onclick="document.getElementById('chat-sb-el').classList.toggle('open')" title="Menu">☰</div>
+                <div class="chat-hdr-av" style="background:linear-gradient(135deg,#9333ea,#ec4899)">💜</div>
+                <div><div class="chat-hdr-n">Crazy Squad 💜</div><div class="chat-hdr-s" id="chat-status">...</div></div>
+                <div class="chat-hdr-acts">
+                  <button class="ch-act" onclick="toast('📸 Kirim foto segera!')">📸</button>
+                  <button class="ch-act" onclick="goPage('plan',document.querySelectorAll('.nb')[5])">📅 Plan</button>
+                </div>
+              </div>
+              <div class="chat-msgs" id="chat-msgs" onclick="if(window.innerWidth<=768)document.getElementById('chat-sb-el').classList.remove('open')"></div>
+              <div class="typing-ind" id="typing-ind"></div>
+              <div id="reply-bar"><div class="rb-txt" id="rb-txt"></div><button class="rb-x" onclick="clearReply()">✕</button></div>
+              <div id="stk-panel">
+                <div class="sp-cats">
+                  <div class="sp-cat active" onclick="stkCat('love',this)">💜 Love</div>
+                  <div class="sp-cat" onclick="stkCat('haha',this)">😂 Haha</div>
+                  <div class="sp-cat" onclick="stkCat('vibe',this)">✨ Vibe</div>
+                  <div class="sp-cat" onclick="stkCat('food',this)">🍜 Food</div>
+                </div>
+                <div class="sp-grid" id="stk-grid"></div>
+              </div>
+              <div class="chat-inp-area">
+                <div class="ci-row">
+                  <div class="ci-tools">
+                    <div class="ci-tool" id="stk-btn" onclick="toggleStkPanel()">🎭</div>
+                    <div class="ci-tool" onclick="toast('📎 Coming soon!')">📎</div>
+                  </div>
+                  <div class="ci-wrap"><textarea class="ci-inp" id="ci-inp" rows="1" placeholder="Ketik pesan..." onkeydown="ciKey(event)" oninput="ciResize(this)"></textarea></div>
+                  <button class="ci-send" onclick="sendMsg()">➤</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KENANGAN -->
+        <div class="page" id="page-kenangan">
+          <div class="ken-w">
+            <div class="pg-hdr">
+              <div><div class="pg-title">Kenangan 📸</div><div class="pg-sub">Momen indah yang kita simpan bareng</div></div>
+              <button class="add-btn" onclick="openModal('ken-modal')">+ Tambah</button>
+            </div>
+            <div class="ken-grid" id="ken-grid"></div>
+          </div>
+        </div>
+
+        <!-- WISHLIST -->
+        <div class="page" id="page-wishlist">
+          <div class="wish-w">
+            <div class="pg-hdr">
+              <div><div class="pg-title">Wishlist 🌟</div><div class="pg-sub">Impian dan keinginan kita ✨</div></div>
+              <button class="add-btn" id="wish-add-btn" onclick="openModal('wish-modal')">+ Tambah</button>
+            </div>
+            <div class="member-tabs" id="wish-tabs"></div>
+            <div class="wi-list" id="wi-list"></div>
+          </div>
+        </div>
+
+        <!-- MOOD -->
+        <div class="page" id="page-mood">
+          <div class="mood-w">
+            <div class="pg-title" style="margin-bottom:4px">Mood Hari Ini 💭</div>
+            <div class="pg-sub" style="margin-bottom:17px">Ceritain perasaanmu hari ini</div>
+            <div style="text-align:center;margin-bottom:7px;font-size:.7rem;font-weight:800;color:var(--text3);letter-spacing:2px;text-transform:uppercase;">Mood kamu sekarang?</div>
+            <div class="me-grid">
+              <div class="meb" onclick="setMood(this,'😊','Bahagia')"><div class="me-icon">😊</div><div class="mel">Bahagia</div></div>
+              <div class="meb" onclick="setMood(this,'🥰','Bucin')"><div class="me-icon">🥰</div><div class="mel">Bucin</div></div>
+              <div class="meb" onclick="setMood(this,'😴','Ngantuk')"><div class="me-icon">😴</div><div class="mel">Ngantuk</div></div>
+              <div class="meb" onclick="setMood(this,'😤','Kesel')"><div class="me-icon">😤</div><div class="mel">Kesel</div></div>
+              <div class="meb" onclick="setMood(this,'🤩','Semangat')"><div class="me-icon">🤩</div><div class="mel">Semangat</div></div>
+              <div class="meb" onclick="setMood(this,'😢','Sedih')"><div class="me-icon">😢</div><div class="mel">Sedih</div></div>
+            </div>
+            <div class="mom-lbl" style="margin-top:15px">Mood Squad 💜</div>
+            <div class="fm-grid" id="fm-grid"></div>
+          </div>
+        </div>
+
+        <!-- PLAN -->
+        <div class="page" id="page-plan">
+          <div class="plan-w">
+            <div class="pg-hdr">
+              <div><div class="pg-title">Plan Squad 📅</div><div class="pg-sub">Vote & bikin jadwal bareng!</div></div>
+              <button class="add-btn" onclick="openModal('plan-modal')">+ Tambah Plan</button>
+            </div>
+            <div id="plan-list"></div>
+          </div>
+        </div>
+
+        <!-- BIRTHDAY -->
+        <div class="page" id="page-birthday">
+          <div class="bday-w">
+            <!-- MY BIRTHDAY HERO -->
+            <div id="my-bday-section"></div>
+            <!-- SQUAD LIST -->
+            <div class="pg-hdr" style="margin-top:22px">
+              <div><div class="pg-title">Ultah Squad 🎂</div><div class="pg-sub">Jangan sampai lupa ultah bestie kamu!</div></div>
+            </div>
+            <div class="bday-cards" id="bday-cards"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- emoji picker -->
+<div class="ep" id="ep" style="display:none;"></div>
+
+<!-- modal kenangan -->
+<div class="modal-ov" id="ken-modal">
+  <div class="modal-box">
+    <div class="modal-title">✨ Tambah Kenangan</div>
+    <!-- Photo upload area -->
+    <div class="modal-fld">
+      <div class="modal-lbl">Foto</div>
+      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('km-photo').click()">
+        <div class="photo-drop-inner" id="photo-preview">
+          <div class="pd-icon">📸</div>
+          <div class="pd-txt">Klik atau drag foto ke sini</div>
+          <div class="pd-sub">JPG, PNG, WEBP · max 5MB</div>
+        </div>
+      </div>
+      <input type="file" id="km-photo" accept="image/*" style="display:none" onchange="handlePhotoSelect(this)">
+    </div>
+    <div class="modal-fld"><div class="modal-lbl">Judul</div><input class="modal-inp" id="km-title" placeholder="Nama momen..."></div>
+    <div class="modal-fld"><div class="modal-lbl">Cerita</div><textarea class="modal-inp modal-ta" id="km-cap" placeholder="Cerita singkat..."></textarea></div>
+    <div class="modal-fld" id="km-emoji-fld">
+      <div class="modal-lbl">Emoji (kalau ga ada foto)</div>
+      <input class="modal-inp" id="km-em" placeholder="🎂 🎵 🍜..." style="font-size:1.3rem;">
+    </div>
+    <div class="modal-row">
+      <button class="modal-btn c" onclick="closeModal('ken-modal');resetKenForm()">Batal</button>
+      <button class="modal-btn p" onclick="addKen()">Simpan 💜</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal plan -->
+<div class="modal-ov" id="plan-modal">
+  <div class="modal-box">
+    <div class="modal-title">📅 Tambah Plan</div>
+    <div class="modal-fld"><div class="modal-lbl">Nama Plan</div><input class="modal-inp" id="pm-name" placeholder="Nama rencana..."></div>
+    <div class="modal-fld"><div class="modal-lbl">Emoji</div><input class="modal-inp" id="pm-icon" placeholder="🏖️ 🎬 🍕..." style="font-size:1.2rem;"></div>
+    <div class="modal-fld"><div class="modal-lbl">Deskripsi</div><textarea class="modal-inp modal-ta" id="pm-desc" placeholder="Ceritain rencananya..."></textarea></div>
+    <div class="modal-fld"><div class="modal-lbl">Tanggal (opsional, untuk countdown)</div><input class="modal-inp" id="pm-date" type="date"></div>
+    <div class="modal-row">
+      <button class="modal-btn c" onclick="closeModal('plan-modal')">Batal</button>
+      <button class="modal-btn p" onclick="addPlan()">Tambah 📅</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal wishlist -->
+<div class="modal-ov" id="wish-modal">
+  <div class="modal-box">
+    <div class="modal-title">🌟 Tambah Wishlist</div>
+    <div class="modal-fld"><div class="modal-lbl">Nama Item</div><input class="modal-inp" id="wm-name" placeholder="Nama barang/keinginan..."></div>
+    <div class="modal-fld"><div class="modal-lbl">Emoji</div><input class="modal-inp" id="wm-em" placeholder="👟 📱 🎧..." style="font-size:1.3rem;"></div>
+    <div class="modal-fld"><div class="modal-lbl">Estimasi Harga</div><input class="modal-inp" id="wm-price" placeholder="Rp ..."></div>
+    <div class="modal-fld"><div class="modal-lbl">Catatan</div><input class="modal-inp" id="wm-note" placeholder="Catatan singkat..."></div>
+    <div class="modal-row">
+      <button class="modal-btn c" onclick="closeModal('wish-modal')">Batal</button>
+      <button class="modal-btn p" onclick="addWish()">Tambah 🌟</button>
+    </div>
+  </div>
+</div>
+
+<!-- load overlay -->
+<div id="load-ov"><div class="ls"></div><div class="lt" id="lt-txt">Masuk ke Squad...</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== CONFIG =====================
+const PW='Iniwebsitekitabersama65*';
+const AVS=['🌙','🌺','🍀','🌻','✨','🦋','🌸','🎀','🌈'];
+const AVC=['linear-gradient(135deg,#9333ea,#a855f7)','linear-gradient(135deg,#ec4899,#f472b6)','linear-gradient(135deg,#6366f1,#818cf8)','linear-gradient(135deg,#0ea5e9,#38bdf8)','linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#ef4444,#f87171)','linear-gradient(135deg,#8b5cf6,#c084fc)','linear-gradient(135deg,#06b6d4,#67e8f9)'];
+const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+// ===================== STORAGE — Firebase + localStorage fallback =====================
+// TOKEN: setiap member dapat token dari hash(password+username) disimpan di session
+// Firebase rules cek token ini via custom auth UID
+
+const HASH_SALT = 'crazysquad_2026_private';
+
+// Hash sederhana untuk validasi token (bukan kriptografi berat, cukup untuk obfuscasi)
+async function hashToken(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').substring(0,32);
+}
+
+// Generate member token — disimpan di session, dikirim ke Firebase untuk validasi
+async function genMemberToken(username){
+  return await hashToken(HASH_SALT + PW + username);
+}
+
+// localStorage helpers (fallback + cache)
+// Storage: pakai localStorage (persistent) atau sessionStorage (hilang saat browser tutup)
+// Default: localStorage. Kalau "Ingat Saya" tidak dicentang → sessionStorage untuk session
+function sg(k){
+  try{
+    return JSON.parse(localStorage.getItem('cs_'+k)||sessionStorage.getItem('cs_'+k)||'null');
+  }catch{return null;}
+}
+function ss(k,v){
+  try{
+    // session key selalu ke localStorage (member data, messages, dll)
+    // tapi 'session' key ikut preferensi remember-me
+    if(k==='session'){
+      const rem = localStorage.getItem('cs_remember')==='true';
+      if(rem){ localStorage.setItem('cs_'+k,JSON.stringify(v)); sessionStorage.removeItem('cs_'+k); }
+      else { sessionStorage.setItem('cs_'+k,JSON.stringify(v)); localStorage.removeItem('cs_'+k); }
+    } else {
+      localStorage.setItem('cs_'+k,JSON.stringify(v));
+    }
+  }catch{}
+}
+
+// Firebase helpers — dengan fallback ke localStorage kalau Firebase tidak tersedia
+async function fbGet(path){
+  if(!window._fbReady || !window._fb) return null;
+  try{
+    const snap = await window._fb.get(window._fb.ref(window._fb.db, path));
+    return snap.exists() ? snap.val() : null;
+  }catch(e){console.warn('fbGet error',e);return null;}
+}
+
+async function fbSet(path, value){
+  if(!window._fbReady || !window._fb){return;}
+  try{ await window._fb.set(window._fb.ref(window._fb.db, path), value); }
+  catch(e){console.warn('fbSet error',e);}
+}
+
+async function fbPush(path, value){
+  if(!window._fbReady || !window._fb) return null;
+  try{
+    const r = await window._fb.push(window._fb.ref(window._fb.db, path), value);
+    return r.key;
+  }catch(e){console.warn('fbPush error',e);return null;}
+}
+
+async function fbUpdate(path, value){
+  if(!window._fbReady || !window._fb) return;
+  try{ await window._fb.update(window._fb.ref(window._fb.db, path), value); }
+  catch(e){console.warn('fbUpdate error',e);}
+}
+
+async function fbRemove(path){
+  if(!window._fbReady || !window._fb) return;
+  try{ await window._fb.remove(window._fb.ref(window._fb.db, path)); }
+  catch(e){console.warn('fbRemove error',e);}
+}
+
+// Subscribe realtime — otomatis update UI saat data berubah
+function fbListen(path, cb){
+  if(!window._fbReady || !window._fb) return ()=>{};
+  const r = window._fb.ref(window._fb.db, path);
+  const unsub = window._fb.onValue(r, snap => cb(snap.exists() ? snap.val() : null));
+  return unsub;
+}
+
+// Universal get/set — pakai Firebase kalau ready, fallback localStorage
+async function dbGet(k){
+  if(window._fbReady && window._fb){
+    const v = await fbGet('squad/'+k);
+    if(v!==null){ ss(k,v); return v; } // sync to localStorage cache
+  }
+  return sg(k);
+}
+
+async function dbSet(k,v){
+  ss(k,v); // always update localStorage cache first (instant)
+  if(window._fbReady && window._fb){
+    await fbSet('squad/'+k, v);
+  }
+}
+
+// ===================== STATE =====================
+let CU=null,members=[];
+
+// ===================== SCENE INIT =====================
+function initScene(){
+  // bubbles
+  const bl=document.getElementById('bub-layer');
+  for(let i=0;i<16;i++){
+    const b=document.createElement('div');b.className='bub';
+    const sz=16+Math.random()*52,op=0.04+Math.random()*.09;
+    b.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;animation-duration:${13+Math.random()*20}s;animation-delay:${Math.random()*20}s;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,${op*2.8}),rgba(216,180,254,${op*.5}) 40%,transparent 68%);border:1px solid rgba(255,255,255,${op*3.2});box-shadow:inset 0 0 ${sz*.3}px rgba(192,132,252,${op*2}),0 0 ${sz*.4}px rgba(139,92,246,${op});backdrop-filter:blur(2px);`;
+    bl.appendChild(b);
+  }
+  // stars
+  const c=document.getElementById('stars');c.width=window.innerWidth;c.height=window.innerHeight;
+  const ctx=c.getContext('2d');
+  for(let i=0;i<150;i++){const x=Math.random()*c.width,y=Math.random()*c.height,r=Math.random()*1.2,a=Math.random()*.65+.1;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=Math.random()>.6?`rgba(216,180,254,${a})`:`rgba(255,255,255,${a})`;ctx.fill();}
+  // bokeh
+  const bk=document.getElementById('bokeh');
+  const BC=['rgba(192,132,252,','rgba(216,180,254,','rgba(167,139,250,','rgba(244,114,182,','rgba(255,255,255,'];
+  for(let i=0;i<24;i++){
+    const d=document.createElement('div');d.className='bk';
+    const sz=3+Math.random()*8,op=.14+Math.random()*.32,col=BC[~~(Math.random()*BC.length)];
+    d.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*72}%;background:radial-gradient(circle,${col}${op+.1}) 0%,transparent 70%);box-shadow:0 0 ${sz*2}px ${col}${op});animation-duration:${4+Math.random()*6}s;animation-delay:${Math.random()*6}s;--op:${op};`;
+    bk.appendChild(d);
+  }
+}
+
+// ===================== LOGIN =====================
+function genUname(n){return n.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'').substring(0,20);}
+function previewUname(){
+  const n=document.getElementById('l-name').value;
+  document.getElementById('l-preview').textContent=n.trim().length>=2?'Username: @'+genUname(n):'';
+}
+function toggleEye(){const i=document.getElementById('l-pw');i.type=i.type==='password'?'text':'password';}
+
+function loadWhoJoined(){
+  const mems=sg('members')||[];
+  const el=document.getElementById('wj-chips');
+  if(!mems.length){el.innerHTML='<div style="font-size:.68rem;color:rgba(255,255,255,.28);font-style:italic;">Jadilah yang pertama! 🥳</div>';return;}
+  el.innerHTML=mems.map(m=>`<div class="wj-chip"><div class="wj-av" style="background:${m.color}">${m.avatar}</div>${m.name.split(' ')[0]}</div>`).join('');
+}
+
+function doLogin(){
+  const name=document.getElementById('l-name').value.trim();
+  const dob=document.getElementById('l-dob').value;
+  const pw=document.getElementById('l-pw').value;
+  const err=document.getElementById('l-err');
+  err.textContent='';
+  ['l-name','l-dob','l-pw'].forEach(id=>document.getElementById(id).classList.remove('err'));
+
+  if(name.length<2){markErr('l-name','Nama minimal 2 karakter ya!');return;}
+  if(!dob){markErr('l-dob','Tanggal lahir wajib diisi 🎂');return;}
+  if(pw!==PW){markErr('l-pw','Password salah! Tanya temen kamu 🔐');return;}
+
+  // show loader
+  document.getElementById('load-ov').style.display='flex';
+  document.getElementById('lt-txt').textContent='Masuk ke Squad...';
+
+  const username=genUname(name);
+  let mems=sg('members')||[];
+  let user=mems.find(m=>m.username===username);
+  if(!user){
+    const idx=mems.length;
+    user={name,username,dob,avatar:AVS[idx%9],color:AVC[idx%9],idx};
+    mems.push(user);ss('members',mems);
+  } else {
+    // update dob if not set
+    if(!user.dob){user.dob=dob;ss('members',mems);}
+  }
+  // Simpan preferensi "Ingat Saya"
+  const remCb = document.getElementById('remember-me');
+  const remember = remCb ? remCb.checked : true;
+  localStorage.setItem('cs_remember', remember ? 'true' : 'false');
+  CU=user;members=mems;ss('session',user);
+
+  // Save member token to Firebase for rules validation
+  genMemberToken(user.username).then(async token=>{
+    user.token=token;ss('session',user);CU=user;
+    if(window._fbReady){
+      // Store member data + token in Firebase
+      await fbSet('squad/members/'+user.username, {
+        name:user.name, username:user.username, dob:user.dob,
+        avatar:user.avatar, color:user.color, idx:user.idx,
+        token:token, lastSeen: Date.now()
+      });
+      // Store all members in sync
+      await dbSet('members', mems);
+    }
+    document.getElementById('load-ov').style.display='none';
+    transitionToApp();
+  });
+}
+
+function markErr(id,msg){
+  document.getElementById(id).classList.add('err');
+  setTimeout(()=>document.getElementById(id).classList.remove('err'),600);
+  document.getElementById('l-err').textContent=msg;
+}
+
+function transitionToApp(){
+  // morph bg: hide mountain, show space
+  document.getElementById('sky-mtn').style.opacity='0';
+  document.getElementById('sky-app').style.opacity='1';
+  document.getElementById('mtn-layer').style.opacity='0';
+  // hide login
+  document.getElementById('login-view').classList.add('hide');
+  // show app after short delay
+  setTimeout(()=>{
+    document.getElementById('app-view').classList.add('show');
+    setupApp();
+  },500);
+}
+
+function doLogout(){
+  // Hapus session dari kedua storage
+  localStorage.removeItem('cs_session');
+  sessionStorage.removeItem('cs_session');
+  localStorage.removeItem('cs_remember');
+  // reverse transition
+  document.getElementById('app-view').classList.remove('show');
+  document.getElementById('login-view').classList.remove('hide');
+  document.getElementById('sky-mtn').style.opacity='1';
+  document.getElementById('sky-app').style.opacity='0';
+  document.getElementById('mtn-layer').style.opacity='1';
+  loadWhoJoined();
+  document.getElementById('l-name').value='';
+  document.getElementById('l-pw').value='';
+  document.getElementById('l-dob').value='';
+  document.getElementById('l-preview').textContent='';
+  CU=null;
+}
+
+// check session
+// Called when Firebase is ready (or failed)
+window._onFirebaseReady = async function(){
+  const sess = sg('session');
+  if(!sess) return; // not logged in, nothing to do
+  if(!CU) { CU=sess; members=sg('members')||[CU]; }
+  if(window._fbReady){
+    // Sync members from Firebase first
+    const fbMembers = await fbGet('squad/members');
+    if(fbMembers){
+      members = Object.values(fbMembers).filter(m=>m.username);
+      ss('members', members);
+    }
+    // Update member lastSeen
+    if(CU.username){
+      fbUpdate('squad/members/'+CU.username, {lastSeen: Date.now()});
+    }
+    // Start all realtime listeners — ini yang bikin semua sync
+    setupRealtimeListeners();
+    // Refresh UI setelah Firebase siap
+    buildSidebar();buildHomeMembers();updateStats();
+    buildBdayPage();buildBdayBanner();
+    buildPlan();buildKen();buildWishlist();buildMoodGrid();
+  }
+};
+
+function updateStats(){
+  // Selalu hitung dari data terkini — dipanggil setiap kali ada perubahan
+  const mEl=document.getElementById('stat-members');
+  const kEl=document.getElementById('stat-ken');
+  const pEl=document.getElementById('stat-plan');
+  const mMel=document.getElementById('stat-msgs');
+  if(mEl) mEl.textContent = members.length;
+  if(kEl) kEl.textContent = kenList.length;
+  if(pEl){
+    const plans = sg('plans')||[];
+    pEl.textContent = plans.length;
+  }
+  if(mMel){
+    const visibleMsgs = msgs.filter(m=>!m.deleted);
+    mMel.textContent = visibleMsgs.length;
+  }
+}
+
+function setupRealtimeListeners(){
+  if(!window._fbReady || !CU) return;
+
+  // ── MESSAGES — realtime sync ke semua device ──
+  fbListen('squad/messages', (data)=>{
+    if(!data){ msgs=[]; renderMsgs(); updateStats(); return; }
+    const arr = Object.entries(data)
+      .map(([k,v])=>({...v, fbKey:k}))
+      .sort((a,b)=>(a.ts||0)-(b.ts||0));
+    msgs = arr;
+    ss('messages', arr);
+    renderMsgs();
+    updateStats();
+  });
+
+  // ── MEMBERS — sync daftar member ke semua device ──
+  fbListen('squad/members', (data)=>{
+    if(!data) return;
+    members = Object.values(data).filter(m=>m.username);
+    ss('members', members);
+    buildSidebar();
+    buildHomeMembers();
+    buildMoodGrid();
+    buildBdayPage();
+    buildBdayBanner();
+    updateStats();
+    // update who-joined chips di login page
+    loadWhoJoined();
+  });
+
+  // ── MOODS — sync mood semua member ──
+  fbListen('squad/moods', (data)=>{
+    if(!data) return;
+    ss('moods', data);
+    buildMoodGrid();
+  });
+
+  // ── KENANGAN — sync kenangan ke semua device ──
+  fbListen('squad/kenangan', (data)=>{
+    if(!data){ kenList=[]; renderKen(); updateStats(); return; }
+    // Firebase simpan array sebagai object, convert balik
+    kenList = Array.isArray(data) ? data : Object.values(data);
+    ss('kenangan', kenList);
+    renderKen();
+    updateStats();
+  });
+
+  // ── PLANS — sync plans + vote realtime ──
+  fbListen('squad/plans', (data)=>{
+    if(!data){ ss('plans',[]); buildPlan(); startCd(); updateStats(); return; }
+    const plans = Array.isArray(data) ? data : Object.values(data);
+    ss('plans', plans);
+    buildPlan();
+    startCd();
+    updateStats();
+  });
+
+  // ── WISHLIST — sync wishlist per user ──
+  fbListen('squad/wishlist', (data)=>{
+    if(!data) return;
+    // wishlist disimpan per username
+    wishData = data;
+    ss('wishlist', data);
+    renderWishTabs();
+    renderWishList();
+  });
+}
+
+function checkSession(){
+  const sess=sg('session');
+  if(sess){
+    // Auto-fill nama di login form biar keliatan siapa yang login
+    const nameInp=document.getElementById('l-name');
+    if(nameInp && sess.name) nameInp.value=sess.name;
+    CU=sess;members=sg('members')||[CU];
+    document.getElementById('sky-mtn').style.transition='none';
+    document.getElementById('sky-app').style.transition='none';
+    document.getElementById('mtn-layer').style.transition='none';
+    document.getElementById('sky-mtn').style.opacity='0';
+    document.getElementById('sky-app').style.opacity='1';
+    document.getElementById('mtn-layer').style.opacity='0';
+    document.getElementById('login-view').classList.add('hide');
+    document.getElementById('app-view').classList.add('show');
+    setupApp();
+  } else {
+    loadWhoJoined();
+  }
+}
+
+// ===================== APP SETUP =====================
+function setupApp(){
+  document.getElementById('nav-av').textContent=CU.avatar;
+  document.getElementById('nav-name').textContent=CU.name.split(' ')[0];
+  // Stats semua mulai 0 dulu, akan update otomatis dari Firebase listeners
+  ['stat-members','stat-ken','stat-plan','stat-msgs'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && el.id!=='stat-members') el.textContent='0';
+  });
+  updateStats();
+  // Greet if birthday today
+  const today=new Date();
+  if(CU.dob){
+    const bd=new Date(CU.dob);
+    if(bd.getMonth()===today.getMonth()&&bd.getDate()===today.getDate()){
+      setTimeout(()=>{
+        document.getElementById('home-title').textContent='Happy Birthday '+CU.name.split(' ')[0]+'! 🎂🎉';
+        toast('🎂 Selamat ulang tahun '+CU.name.split(' ')[0]+'! Semoga panjang umur dan bahagia! 🎉',5000);
+        launchConfetti();
+      },800);
+    }
+  }
+  // Bersihkan sisa data template lama dari localStorage (sekali aja)
+  const localKen = sg('kenangan')||[];
+  const hasTemplate = localKen.some(k=>!k.addedBy);
+  if(hasTemplate){
+    const cleaned = localKen.filter(k=>k.addedBy);
+    ss('kenangan', cleaned);
+  }
+  const localPlans = sg('plans')||[];
+  const hasTemplatePlan = localPlans.some(p=>!p.addedBy);
+  if(hasTemplatePlan){ ss('plans',[]); }
+  const localWish = sg('wishlist')||{};
+  if(localWish.me){ delete localWish.me; ss('wishlist', localWish); }
+
+  loadMsgs();buildSidebar();buildMoodGrid();buildHomeMembers();buildWishlist();buildPlan();buildKen();startCd();buildBdayPage();buildBdayBanner();
+}
+
+// ===================== NAV =====================
+function goPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>{p.style.display='none';p.classList.remove('active');});
+  const pg=document.getElementById('page-'+id);pg.style.display='block';pg.classList.add('active');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const u={home:'beranda',chat:'chat',kenangan:'kenangan',wishlist:'wishlist',mood:'mood',plan:'plan',birthday:'ultah'};
+  document.getElementById('bf-url').textContent='crazy-squad.private / '+(u[id]||id);
+}
+
+// ===================== COUNTDOWN (event-based) =====================
+function startCd(){
+  function renderEventCd(){
+    const wrap=document.getElementById('event-cd-wrap');if(!wrap)return;
+    const plans=sg('plans')||[];
+    // find plan with tanggal that can be parsed
+    const upcoming=plans.find(p=>p.eventDate&&new Date(p.eventDate)>new Date());
+    if(!upcoming){wrap.innerHTML='';return;}
+    const target=new Date(upcoming.eventDate);
+    function tick(){
+      const wrap2=document.getElementById('event-cd-wrap');if(!wrap2)return;
+      const d=target-new Date();
+      if(d<=0){wrap2.innerHTML='';return;}
+      const dd=Math.floor(d/86400000),hh=Math.floor((d%86400000)/3600000),mm=Math.floor((d%3600000)/60000),ss2=Math.floor((d%60000)/1000);
+      wrap2.innerHTML=`<div class="g-card-pink cd-card">
+        <div class="cd-lbl">⏳ Countdown Ke</div>
+        <div class="cd-ev">${upcoming.icon} ${upcoming.name}</div>
+        <div class="cd-g">
+          <div class="cd-u"><span class="cd-n">${String(dd).padStart(2,'0')}</span><div class="cd-nm">Hari</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-u"><span class="cd-n">${String(hh).padStart(2,'0')}</span><div class="cd-nm">Jam</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-u"><span class="cd-n">${String(mm).padStart(2,'0')}</span><div class="cd-nm">Menit</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-u"><span class="cd-n">${String(ss2).padStart(2,'0')}</span><div class="cd-nm">Detik</div></div>
+        </div>
+      </div>`;
+    }
+    tick();setInterval(tick,1000);
+  }
+  renderEventCd();
+}
+
+// ===================== BIRTHDAY =====================
+function daysUntilBirthday(dobStr){
+  if(!dobStr)return 999;
+  const now=new Date();
+  const dob=new Date(dobStr);
+  const next=new Date(now.getFullYear(),dob.getMonth(),dob.getDate());
+  if(next<now)next.setFullYear(now.getFullYear()+1);
+  const diff=next-now;
+  return Math.floor(diff/86400000);
+}
+function birthdayCountdownMs(dobStr){
+  if(!dobStr)return 0;
+  const now=new Date();
+  const dob=new Date(dobStr);
+  const next=new Date(now.getFullYear(),dob.getMonth(),dob.getDate());
+  if(next<=now)next.setFullYear(now.getFullYear()+1);
+  return next-now;
+}
+function ageOnNextBirthday(dobStr){
+  if(!dobStr)return '?';
+  const dob=new Date(dobStr);
+  const now=new Date();
+  let age=now.getFullYear()-dob.getFullYear();
+  const next=new Date(now.getFullYear(),dob.getMonth(),dob.getDate());
+  if(next<=now)age++;
+  return age;
+}
+function formatDob(dobStr){
+  if(!dobStr)return '-';
+  const d=new Date(dobStr);
+  return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
+}
+function isBdayToday(dobStr){
+  if(!dobStr)return false;
+  const now=new Date(),dob=new Date(dobStr);
+  return dob.getMonth()===now.getMonth()&&dob.getDate()===now.getDate();
+}
+
+function buildBdayPage(){
+  // === MY BIRTHDAY HERO ===
+  const myEl=document.getElementById('my-bday-section');
+  if(myEl&&CU.dob){
+    const isToday=isBdayToday(CU.dob);
+    const days=daysUntilBirthday(CU.dob);
+    const ms=birthdayCountdownMs(CU.dob);
+    // year progress
+    const dob=new Date(CU.dob);
+    const now=new Date();
+    const lastBday=new Date(now.getFullYear(),dob.getMonth(),dob.getDate());
+    if(lastBday>now) lastBday.setFullYear(now.getFullYear()-1);
+    const nextBday=new Date(lastBday); nextBday.setFullYear(lastBday.getFullYear()+1);
+    const progress=Math.round(((now-lastBday)/(nextBday-lastBday))*100);
+    const ageCurr=now.getFullYear()-dob.getFullYear()-(now<new Date(now.getFullYear(),dob.getMonth(),dob.getDate())?1:0);
+    const ageNext=ageOnNextBirthday(CU.dob);
+    myEl.innerHTML=`
+      <div class="my-bday-hero">
+        <div class="mbh-top">
+          <div class="mbh-av" style="background:${CU.color}">${CU.avatar}</div>
+          <div class="mbh-info">
+            <div class="mbh-name">${CU.name} ${isToday?'🎂':''}</div>
+            <div class="mbh-date">📅 ${formatDob(CU.dob)}</div>
+            <div class="mbh-age">${isToday?'Selamat ulang tahun! 🎉 Kamu sekarang '+ageNext+' tahun!':(ageCurr+' tahun sekarang · Akan jadi '+ageNext+' tahun')}</div>
+            ${isToday?'<div class="mbh-today">🎉 Selamat Ulang Tahun!</div>':''} 
+          </div>
+        </div>
+        ${isToday?
+          '<div class="mbh-cd-title">🎊 HARI SPESIALMU!</div><div style="text-align:center;font-size:2.5rem;margin:10px 0">🎂🎉🥳🎁🎊</div>':
+          `<div class="mbh-cd-title">⏳ COUNTDOWN ULTAH KAMU</div>
+           <div class="mbh-cd-row" id="my-bday-cd"></div>
+           <div class="mbh-progress">
+             <div class="mbh-prog-lbl"><span>Ultah terakhir (${ageCurr} thn)</span><span>${progress}%</span><span>Ultah selanjutnya (${ageNext} thn)</span></div>
+             <div class="mbh-prog-bar"><div class="mbh-prog-fill" id="mbh-fill" style="width:${progress}%"></div></div>
+           </div>`
+        }
+      </div>`;
+    if(!isToday) startMyBdCd(CU.dob,'my-bday-cd');
+  } else if(myEl){
+    myEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:.8rem;background:rgba(255,255,255,.06);border-radius:16px;border:1px solid rgba(255,255,255,.10);">Tanggal lahir belum diset. Logout dan login ulang untuk menambahkan.</div>';
+  }
+
+  // === SQUAD LIST (semua kecuali diri sendiri di atas, diri sendiri tetap ada tapi badge "you") ===
+  const el=document.getElementById('bday-cards');if(!el)return;
+  const sorted=[...members].sort((a,b)=>daysUntilBirthday(a.dob)-daysUntilBirthday(b.dob));
+  el.innerHTML=sorted.map(m=>{
+    const days=daysUntilBirthday(m.dob);
+    const isToday=isBdayToday(m.dob);
+    const isSoon=days<=7&&!isToday;
+    const isMe=m.username===CU.username;
+    let cdId='bcd-'+m.username;
+    return `<div class="bdc ${isToday?'today':isSoon?'soon':''}" style="${isMe?'border-color:rgba(192,132,252,.45);':''}" >
+      <div class="bdc-av" style="background:${m.color}">${m.avatar}</div>
+      <div class="bdc-info">
+        <div class="bdc-name">${m.name} ${isToday?'🎂':''} ${isMe?'<span style="font-size:.58rem;background:linear-gradient(135deg,#9333ea,#ec4899);border-radius:50px;padding:1px 7px;font-weight:700;vertical-align:middle">Kamu</span>':''}</div>
+        <div class="bdc-date">📅 ${formatDob(m.dob)}</div>
+        <div class="bdc-age">Akan berumur ${ageOnNextBirthday(m.dob)} tahun</div>
+        ${!isToday?`<div class="bdc-cd-row" id="${cdId}"></div>`:`<div style="font-size:.78rem;color:#f472b6;font-weight:800;margin-top:6px;">🎉 Happy Birthday today! 🎉</div>`}
+      </div>
+      <div class="bdc-right">
+        <div class="bdc-days" style="background:${isToday?'linear-gradient(135deg,#f472b6,#fb7185)':isSoon?'linear-gradient(135deg,#c084fc,#f472b6)':'linear-gradient(135deg,#a78bfa,#c084fc)'};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${isToday?'🎂':days}</div>
+        <div class="bdc-dlbl" style="color:${isToday?'#f472b6':isSoon?'#c084fc':''}">${isToday?'HARI INI!':days===1?'besok!':'hari lagi'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  sorted.forEach(m=>{
+    if(!m.dob||isBdayToday(m.dob))return;
+    startBdCd(m.dob,'bcd-'+m.username);
+  });
+}
+
+function startMyBdCd(dob,elId){
+  function tick(){
+    const el=document.getElementById(elId);if(!el)return;
+    const ms=birthdayCountdownMs(dob);
+    if(ms<=0){el.innerHTML='<span style="color:#f472b6;font-weight:800;font-size:.88rem;">🎂 Hari ini ultahmu!</span>';return;}
+    const d=Math.floor(ms/86400000),h=Math.floor((ms%86400000)/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
+    el.innerHTML=`
+      <div class="mbh-cu"><div class="mbh-cn">${String(d).padStart(2,'0')}</div><div class="mbh-cl">Hari</div></div>
+      <div class="mbh-cu"><div class="mbh-cn">${String(h).padStart(2,'0')}</div><div class="mbh-cl">Jam</div></div>
+      <div class="mbh-cu"><div class="mbh-cn">${String(m).padStart(2,'0')}</div><div class="mbh-cl">Menit</div></div>
+      <div class="mbh-cu"><div class="mbh-cn">${String(s).padStart(2,'0')}</div><div class="mbh-cl">Detik</div></div>`;
+  }
+  tick();const iv=setInterval(()=>{if(!document.getElementById(elId)){clearInterval(iv);return;}tick();},1000);
+}
+
+function startBdCd(dob,elId){
+  function tick(){
+    const el=document.getElementById(elId);if(!el)return;
+    const ms=birthdayCountdownMs(dob);
+    if(ms<=0){el.innerHTML='<span style="color:#f472b6;font-size:.74rem;font-weight:800;">🎂 Hari ini!</span>';return;}
+    const d=Math.floor(ms/86400000);
+    const h=Math.floor((ms%86400000)/3600000);
+    const m=Math.floor((ms%3600000)/60000);
+    const s=Math.floor((ms%60000)/1000);
+    el.innerHTML=`
+      <div class="bdc-cu"><div class="bdc-cn">${String(d).padStart(2,'0')}</div><div class="bdc-cl">Hari</div></div>
+      <div class="bdc-cu"><div class="bdc-cn">${String(h).padStart(2,'0')}</div><div class="bdc-cl">Jam</div></div>
+      <div class="bdc-cu"><div class="bdc-cn">${String(m).padStart(2,'0')}</div><div class="bdc-cl">Mnt</div></div>
+      <div class="bdc-cu"><div class="bdc-cn">${String(s).padStart(2,'0')}</div><div class="bdc-cl">Dtk</div></div>`;
+  }
+  tick();const iv=setInterval(()=>{if(!document.getElementById(elId)){clearInterval(iv);return;}tick();},1000);
+}
+
+function buildBdayBanner(){
+  const el=document.getElementById('bday-banner-home');if(!el)return;
+  const sorted=[...members].filter(m=>m.dob).sort((a,b)=>daysUntilBirthday(a.dob)-daysUntilBirthday(b.dob));
+  const first=sorted[0];
+  if(!first)return;
+  const days=daysUntilBirthday(first.dob);
+  const isToday=isBdayToday(first.dob);
+  if(days>30&&!isToday)return;
+  el.innerHTML=`<div class="bday-banner">
+    <div class="bday-icon">${isToday?'🎂':'🎁'}</div>
+    <div class="bday-info">
+      <div class="bday-title">${isToday?'Happy Birthday '+first.name.split(' ')[0]+'!':'Ultah '+first.name.split(' ')[0]+' Sebentar Lagi!'}</div>
+      <div class="bday-sub">${isToday?'Semoga panjang umur dan selalu bahagia! 🎉':formatDob(first.dob)+' • '+ageOnNextBirthday(first.dob)+' tahun'}</div>
+    </div>
+    <div class="bday-cd">
+      <div class="bday-days">${isToday?'🎉':days}</div>
+      <div class="bday-dlbl">${isToday?'TODAY!':'hari lagi'}</div>
+    </div>
+  </div>`;
+}
+
+function launchConfetti(){
+  const colors=['#f0abfc','#a78bfa','#f472b6','#c084fc','#e879f9','#818cf8','#fbbf24'];
+  for(let i=0;i<60;i++){
+    setTimeout(()=>{
+      const c=document.createElement('div');c.className='conf';
+      c.style.cssText=`left:${Math.random()*100}vw;background:${colors[~~(Math.random()*colors.length)]};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*.5}s;transform:rotate(${Math.random()*360}deg);`;
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(),4000);
+    },i*30);
+  }
+}
+
+// ===================== SIDEBAR =====================
+function buildSidebar(){
+  document.getElementById('sb-members').innerHTML=members.map(m=>`<div class="sm ${m.username===CU.username?'active':''}"><div class="sm-av" style="background:${m.color}">${m.avatar}</div><div class="sm-n">${m.name.split(' ')[0]}</div><div class="sm-dot on"></div></div>`).join('');
+  document.getElementById('chat-status').textContent=members.length+' member online 🟢';
+}
+function buildHomeMembers(){
+  const el=document.getElementById('members-home-grid');if(!members.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="mom-lbl">👥 Squad Members</div><div class="mom-row">`+members.map(m=>`<div class="mom-card"><div class="mom-img" style="background:${m.color};font-size:2.1rem">${m.avatar}</div><div class="mom-body"><div class="mom-t">${m.name}</div><div class="mom-m">@${m.username}</div></div></div>`).join('')+`</div>`;
+}
+
+// ===================== CHAT =====================
+const STKS={love:['💜','🥰','😘','💕','💗','💓','🫶','❤️‍🔥','💌','🌸'],haha:['😂','🤣','😹','💀','🫠','😵','🙃','😜','🤪','😏'],vibe:['✨','🌟','💫','⭐','🎶','🎵','🔥','💥','🌈','🦋'],food:['🍜','🍕','🧁','🍦','🧋','🍰','🍣','🥤','🍩','🍔']};
+const AUTO=['Aduhh bestie 😭💜','Setujuuu banget!!!','Hahaha iya iya 🤣','Ngakak pol 😂😂','Aduh ngantuk nih','Iya dong kita the best!','Kangen ngumpul 🥺','Sumpah deh 😤','Yasss queen 👑✨','Wiih beneran? 😱','Hahaha parah 💀','Ih iyaaa sayang 💜','Okke siap!','Kapan kapan wajib!','Wkwk relate 😭'];
+let msgs=[],msgN=100,replyTo=null,curStkCat='love';
+function tn(){return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});}
+
+function loadMsgs(){
+  msgs=sg('messages')||[];
+  if(!msgs.length){msgs=[{id:1,user:{name:'System',username:'system',avatar:'💜',color:'linear-gradient(135deg,#9333ea,#ec4899)'},text:'Halo Squad! 🎉 Ini ruang chat privat kalian. Mulai ngobrol! 💜',time:tn(),reactions:{},sticker:false,deleted:false}];ss('messages',msgs);}
+  renderMsgs();
+}
+function saveMsgs(){ss('messages',msgs);}
+function renderMsgs(){
+  const el=document.getElementById('chat-msgs');if(!el)return;
+  el.innerHTML='';let lu='';
+  msgs.forEach(m=>{
+    if(m.deleted){const d=document.createElement('div');d.style.cssText='text-align:center;font-size:.62rem;color:var(--text3);font-style:italic;margin:2px 0;';d.textContent='🗑️ Pesan dihapus';el.appendChild(d);lu='';return;}
+    const isMe=m.user.username===CU.username;
+    const grp=document.createElement('div');grp.className='msg-grp'+(isMe?' me':'');
+    const showAv=!isMe&&m.user.username!==lu;
+    const avH=showAv?`<div class="msg-av" style="background:${m.user.color}">${m.user.avatar}</div>`:`<div class="msg-av ph"></div>`;
+    const nH=showAv?`<div class="msg-name">${m.user.name.split(' ')[0]}</div>`:'';
+    const qH=m.replyTo?`<div class="msg-quote"><strong>↩ ${m.replyTo.name}</strong>${m.replyTo.text.substring(0,55)}${m.replyTo.text.length>55?'...':''}</div>`:'';
+    const bc=`msg-bub${m.sticker?' stk':''}${m.replyTo?' hq':''}`;
+    const rks=Object.keys(m.reactions||{}).filter(k=>m.reactions[k].count>0);
+    const rH=rks.length?`<div class="react-row">${rks.map(k=>`<div class="rb2 ${(m.reactions[k].users||[]).includes(CU.username)?'mine':''}" onclick="tgReact(${m.id},'${k}')">${k}<span class="rc">${m.reactions[k].count}</span></div>`).join('')}</div>`:'';
+    grp.innerHTML=`<div class="msg-row">${!isMe?avH:''}<div class="msg-content">${nH}${qH}<div class="${bc}" id="b${m.id}">${m.text}</div>${rH}<div class="msg-meta"><span class="msg-time">${m.time}</span><div class="msg-acts"><button class="ma" onclick="startReply(${m.id})">↩</button><button class="ma" onclick="showEP(event,${m.id})">😊</button>${isMe?`<button class="ma del" onclick="delMsg(${m.id})">🗑️</button>`:''}</div></div></div>${isMe?avH:''}</div>`;
+    el.appendChild(grp);lu=m.user.username;
+  });
+  el.scrollTop=el.scrollHeight;
+}
+async function sendMsg(){
+  const inp=document.getElementById('ci-inp');const txt=inp.value.trim();if(!txt)return;
+  const m={id:++msgN,user:{name:CU.name,username:CU.username,avatar:CU.avatar,color:CU.color},
+    text:txt,time:tn(),ts:Date.now(),reactions:{},sticker:false,deleted:false};
+  if(replyTo){m.replyTo=replyTo;clearReply();}
+  if(window._fbReady){
+    // Firebase — push to realtime DB (listener akan update UI)
+    await fbPush('squad/messages', m);
+  } else {
+    // fallback localStorage
+    msgs.push(m);saveMsgs();renderMsgs();
+  }
+  inp.value='';ciResize(inp);
+}
+function ciKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+function ciResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,90)+'px';}
+function sendStk(em){const m={id:++msgN,user:CU,text:em,time:tn(),reactions:{},sticker:true,deleted:false};if(replyTo){m.replyTo=replyTo;clearReply();}msgs.push(m);saveMsgs();renderMsgs();document.getElementById('stk-panel').classList.remove('on');document.getElementById('stk-btn').classList.remove('on');}
+async function delMsg(id){
+  const m=msgs.find(x=>x.id===id);
+  if(!m||m.user.username!==CU.username)return;
+  if(window._fbReady && m.fbKey){
+    await fbUpdate('squad/messages/'+m.fbKey, {deleted:true});
+  } else { m.deleted=true;saveMsgs();renderMsgs(); }
+  toast('Pesan dihapus 🗑️');
+}
+function startReply(id){const m=msgs.find(x=>x.id===id);if(!m||m.deleted)return;replyTo={id,name:m.user.name.split(' ')[0],text:m.sticker?'[sticker]':m.text};document.getElementById('rb-txt').innerHTML=`<strong>↩ ${replyTo.name}</strong> ${replyTo.text.substring(0,50)}`;document.getElementById('reply-bar').classList.add('on');document.getElementById('ci-inp').focus();}
+function clearReply(){replyTo=null;document.getElementById('reply-bar').classList.remove('on');}
+function showTyping(n){document.getElementById('typing-ind').innerHTML=`<span style="color:var(--violet);font-weight:700">${n}</span> lagi ngetik <span style="display:inline-flex;gap:2px"><span class="td"></span><span class="td"></span><span class="td"></span></span>`;}
+function hideTyping(){document.getElementById('typing-ind').innerHTML='';}
+const EP_EM=['❤️','😂','😍','🔥','👍','😭','😎','✨','💜','🥺','🤩','💀','😤','🎉','🫶'];
+let epT=-1;
+function showEP(e,id){e.preventDefault();e.stopPropagation();epT=id;const ep=document.getElementById('ep');ep.style.display='flex';ep.innerHTML=EP_EM.map(em=>`<div class="ee" onclick="addReact('${em}')">${em}</div>`).join('');let x=e.clientX,y=e.clientY;if(x+190>window.innerWidth)x=window.innerWidth-200;if(y+80>window.innerHeight)y=y-82;ep.style.left=x+'px';ep.style.top=y+'px';}
+function addReact(em){if(epT<0)return;const m=msgs.find(x=>x.id===epT);if(!m)return;if(!m.reactions[em])m.reactions[em]={count:0,users:[]};const r=m.reactions[em];if(r.users.includes(CU.username)){r.count--;r.users=r.users.filter(u=>u!==CU.username);}else{r.count++;r.users.push(CU.username);}if(r.count===0)delete m.reactions[em];saveMsgs();renderMsgs();document.getElementById('ep').style.display='none';epT=-1;}
+function tgReact(id,em){epT=id;addReact(em);}
+document.addEventListener('click',e=>{if(!e.target.closest('#ep')&&!e.target.closest('.ma')){document.getElementById('ep').style.display='none';epT=-1;}});
+function toggleStkPanel(){const sp=document.getElementById('stk-panel'),btn=document.getElementById('stk-btn');const on=sp.classList.contains('on');sp.classList.toggle('on',!on);btn.classList.toggle('on',!on);stkCat(curStkCat,document.querySelector('.sp-cat.active'));}
+function stkCat(cat,el){curStkCat=cat;document.querySelectorAll('.sp-cat').forEach(c=>c.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('stk-grid').innerHTML=(STKS[cat]||[]).map(s=>`<div class="sp-i" onclick="sendStk('${s}')">${s}</div>`).join('');}
+
+// ===================== KENANGAN =====================
+const defKen=[];
+let kenList=[];
+let kenPhotoData=null; // base64 of selected photo
+
+async function buildKen(){
+  if(window._fbReady){
+    // Firebase ready — ambil dari Firebase, ABAIKAN localStorage lama
+    const fbData = await fbGet('squad/kenangan');
+    kenList = fbData ? (Array.isArray(fbData) ? fbData : Object.values(fbData)) : [];
+    ss('kenangan', kenList); // update cache
+  } else {
+    // Firebase tidak ready — pakai localStorage, tapi bersihkan data template lama
+    const local = sg('kenangan') || [];
+    // Hapus data template lama (yang tidak punya addedBy = bikinan template)
+    kenList = local.filter(k => k.addedBy);
+    ss('kenangan', kenList);
+  }
+  renderKen();
+}
+
+function renderKen(){
+  const el=document.getElementById('ken-grid');if(!el)return;
+  // update stat
+  const ks=document.getElementById('stat-ken');if(ks)ks.textContent=kenList.length;
+  // update home mom-row with latest 6 kenangan
+  const hmr=document.getElementById('home-mom-row');
+  if(hmr){
+    if(!kenList.length){hmr.innerHTML='<div style="color:var(--text3);font-size:.8rem;padding:20px;font-weight:600;">Belum ada kenangan. Tambah di menu Kenangan! 📸</div>';}
+    else{hmr.innerHTML=kenList.slice(0,6).map(k=>{
+      const imgH=k.photo?`<div class="mom-img" style="padding:0;overflow:hidden;height:100px"><img src="${k.photo}" style="width:100%;height:100%;object-fit:cover;"></div>`:`<div class="mom-img">${k.emoji||'✨'}</div>`;
+      return `<div class="mom-card" onclick="goPage('kenangan',document.querySelectorAll('.nb')[2])">${imgH}<div class="mom-body"><div class="mom-t">${k.title}</div><div class="mom-m">📅 ${k.date}</div></div></div>`;
+    }).join('');}
+  }
+  if(!kenList.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);">Belum ada kenangan. Tambah yuk! 📸</div>';return;}
+  el.innerHTML=kenList.map(k=>{
+    const liked=(k.likedBy||[]).includes(CU.username);
+    const imgSection=k.photo
+      ? `<div class="ken-img-photo"><img src="${k.photo}" alt="${k.title}" loading="lazy"></div>`
+      : `<div class="ken-img" style="background:linear-gradient(135deg,rgba(147,51,234,.20),rgba(236,72,153,.14))">${k.emoji||'✨'}</div>`;
+    const canDel=k.addedBy===CU.username||!k.addedBy;
+    return `<div class="ken-card">
+      ${imgSection}
+      <div class="ken-body">
+        <div class="ken-t">${k.title}</div>
+        <div class="ken-c">${k.caption}</div>
+        <div class="ken-ft">
+          <div class="ken-d">📅 ${k.date}</div>
+          <div class="ken-card-actions">
+            <button class="ken-like-btn ${liked?'liked':''}" onclick="likeKen(${k.id},event)">❤️ ${k.likes||0}</button>
+            ${canDel?`<button class="ken-del-btn" onclick="deleteKen(${k.id},event)" title="Hapus">🗑️</button>`:''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function likeKen(id,e){
+  e.stopPropagation();
+  const k=kenList.find(x=>x.id===id);if(!k)return;
+  if(!k.likedBy)k.likedBy=[];
+  if(k.likedBy.includes(CU.username)){k.likedBy=k.likedBy.filter(u=>u!==CU.username);k.likes=Math.max(0,(k.likes||1)-1);}
+  else{k.likedBy.push(CU.username);k.likes=(k.likes||0)+1;}
+  ss('kenangan',kenList);
+  if(window._fbReady) fbSet('squad/kenangan', kenList);
+  else renderKen();
+}
+
+function deleteKen(id,e){
+  e.stopPropagation();
+  if(!confirm('Hapus kenangan ini?'))return;
+  kenList=kenList.filter(x=>x.id!==id);
+  ss('kenangan',kenList);
+  if(window._fbReady) fbSet('squad/kenangan', kenList);
+  else renderKen();
+  toast('Kenangan dihapus 🗑️');
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+
+function handlePhotoSelect(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>5*1024*1024){toast('Foto terlalu besar! Max 5MB ya 📸');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    kenPhotoData=e.target.result;
+    const prev=document.getElementById('photo-preview');
+    const drop=document.getElementById('photo-drop');
+    drop.classList.add('has-photo');
+    prev.innerHTML=`<div class="photo-wrap" style="position:relative">
+      <img class="photo-preview-img" src="${kenPhotoData}">
+      <button class="photo-remove-btn" onclick="removePhoto(event)">✕</button>
+    </div>`;
+    // hide emoji field since we have a photo
+    document.getElementById('km-emoji-fld').style.opacity='.4';
+  };
+  reader.readAsDataURL(file);
+}
+
+// drag & drop support
+document.addEventListener('DOMContentLoaded',()=>{
+  const drop=document.getElementById('photo-drop');
+  if(!drop)return;
+  drop.addEventListener('dragover',e=>{e.preventDefault();drop.style.borderColor='rgba(192,132,252,.9)';});
+  drop.addEventListener('dragleave',()=>{drop.style.borderColor='';});
+  drop.addEventListener('drop',e=>{
+    e.preventDefault();drop.style.borderColor='';
+    const file=e.dataTransfer.files[0];
+    if(file&&file.type.startsWith('image/')){
+      const dt=new DataTransfer();dt.items.add(file);
+      document.getElementById('km-photo').files=dt.files;
+      handlePhotoSelect(document.getElementById('km-photo'));
+    }
+  });
+});
+
+function removePhoto(e){
+  e.stopPropagation();kenPhotoData=null;
+  document.getElementById('km-photo').value='';
+  document.getElementById('photo-drop').classList.remove('has-photo');
+  document.getElementById('photo-preview').innerHTML=`<div class="pd-icon">📸</div><div class="pd-txt">Klik atau drag foto ke sini</div><div class="pd-sub">JPG, PNG, WEBP · max 5MB</div>`;
+  document.getElementById('km-emoji-fld').style.opacity='1';
+}
+
+function resetKenForm(){
+  kenPhotoData=null;
+  document.getElementById('km-photo').value='';
+  document.getElementById('km-title').value='';
+  document.getElementById('km-cap').value='';
+  document.getElementById('km-em').value='';
+  document.getElementById('photo-drop').classList.remove('has-photo');
+  document.getElementById('photo-preview').innerHTML=`<div class="pd-icon">📸</div><div class="pd-txt">Klik atau drag foto ke sini</div><div class="pd-sub">JPG, PNG, WEBP · max 5MB</div>`;
+  document.getElementById('km-emoji-fld').style.opacity='1';
+}
+
+function addKen(){
+  const t=document.getElementById('km-title').value.trim();
+  const c=document.getElementById('km-cap').value.trim();
+  const em=document.getElementById('km-em').value.trim()||'✨';
+  if(!t){toast('Isi judul dulu ya!');return;}
+  const now=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+  kenList.unshift({
+    id:Date.now(),title:t,
+    caption:c||'Momen indah bersama squad 💜',
+    emoji:em,photo:kenPhotoData||null,
+    date:now,likes:0,likedBy:[],addedBy:CU.username
+  });
+  ss('kenangan',kenList);
+  if(window._fbReady) fbSet('squad/kenangan', kenList);
+  else renderKen();
+  closeModal('ken-modal');resetKenForm();
+  toast('Kenangan ditambahkan! 💜');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ===================== WISHLIST =====================
+const defWish={};
+let wishData={},activeWish='me';
+function buildWishlist(){wishData=sg('wishlist')||defWish;renderWishTabs();renderWishList();}
+function renderWishTabs(){
+  const el=document.getElementById('wish-tabs');
+  const myKey=CU.username;
+  // sync activeWish: if still 'me' update to CU.username
+  if(activeWish==='me') activeWish=myKey;
+  const tabs=[
+    {key:myKey, lbl:'✨ Aku ('+CU.name.split(' ')[0]+')'},
+    ...members.filter(m=>m.username!==CU.username).map(m=>({key:m.username,lbl:m.name.split(' ')[0]}))
+  ];
+  el.innerHTML=tabs.map(t=>`<div class="mt ${t.key===activeWish?'active':''}" onclick="switchWish('${t.key}')">${t.lbl}</div>`).join('');
+}
+function switchWish(k){activeWish=k;renderWishTabs();renderWishList();}
+function renderWishList(){
+  const el=document.getElementById('wi-list');if(!el)return;
+  const lookupKey = (activeWish==='me') ? CU.username : activeWish;
+  const list=wishData[lookupKey]||[];
+  const isMe=activeWish===CU.username||activeWish==='me';
+  // show add btn only on own tab
+  const addBtn=document.getElementById('wish-add-btn');
+  if(addBtn)addBtn.style.display=isMe?'':'none';
+  if(!list.length){el.innerHTML=`<div style="text-align:center;padding:26px;color:var(--text3);font-size:.78rem;">${isMe?'Belum ada wishlist. Tambah yuk! 🌟':'Belum ada wishlist member ini'}</div>`;return;}
+  el.innerHTML=list.map(w=>`<div class="wi ${w.done?'done':''}">
+    <div class="wi-em">${w.em}</div>
+    <div class="wi-i">
+      <div class="wi-n">${w.name}</div>
+      <div class="wi-pr">${w.price}</div>
+      <div class="wi-no">${w.note}</div>
+    </div>
+    ${isMe?`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+      <div class="wi-cb" onclick="toggleWish(${w.id})"></div>
+      <button onclick="deleteWish(${w.id})" style="background:rgba(251,113,133,.10);border:1px solid rgba(251,113,133,.18);border-radius:7px;padding:2px 7px;color:#fb7185;font-size:.6rem;font-weight:700;cursor:pointer;">✕</button>
+    </div>`:''}
+  </div>`).join('');
+}
+function toggleWish(id){
+  const w=(wishData[activeWish]||[]).find(x=>x.id===id);
+  if(!w) return;
+  w.done=!w.done;
+  ss('wishlist',wishData);
+  if(window._fbReady) fbSet('squad/wishlist/'+activeWish, wishData[activeWish]);
+  renderWishList();
+}
+function addWish(){
+  const name=document.getElementById('wm-name').value.trim();
+  const em=document.getElementById('wm-em').value.trim()||'⭐';
+  const price=document.getElementById('wm-price').value.trim()||'-';
+  const note=document.getElementById('wm-note').value.trim()||'';
+  if(!name){toast('Isi nama item dulu ya!');return;}
+  if(!wishData['me'])wishData['me']=[];
+  wishData['me'].push({id:Date.now(),em,name,price,note,done:false});
+  ss('wishlist',wishData);
+  activeWish='me';renderWishTabs();renderWishList();
+  closeModal('wish-modal');
+  document.getElementById('wm-name').value='';document.getElementById('wm-em').value='';document.getElementById('wm-price').value='';document.getElementById('wm-note').value='';
+  toast('Wishlist ditambahkan! 🌟');
+}
+function deleteWish(id){
+  const wkey = CU.username;
+  if(activeWish!==wkey && activeWish!=='me') return;
+  const key = activeWish==='me' ? wkey : activeWish;
+  wishData[key]=(wishData[key]||[]).filter(w=>w.id!==id);
+  ss('wishlist',wishData);
+  if(window._fbReady) fbSet('squad/wishlist/'+key, wishData[key]);
+  renderWishList();toast('Item dihapus!');
+}
+
+// ===================== MOOD =====================
+const mDef=[{em:'😊'},{em:'🥰'},{em:'😴'}];
+function buildMoodGrid(){const saved=sg('moods')||{};const el=document.getElementById('fm-grid');if(!el)return;el.innerHTML=members.map(m=>{const mood=saved[m.username]||mDef[~~(Math.random()*mDef.length)];return `<div class="fmc"><div class="fav" style="background:${m.color}">${m.avatar}</div><div><div class="fn">${m.name.split(' ')[0]}</div><div class="ft">@${m.username}</div></div><div class="fe">${mood.em}</div></div>`;}).join('');}
+async function setMood(el,em,lbl){
+  document.querySelectorAll('.meb').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  const saved=sg('moods')||{};
+  saved[CU.username]={em,lbl,name:CU.name,avatar:CU.avatar,color:CU.color};
+  ss('moods',saved);
+  if(window._fbReady) await fbUpdate('squad/moods', {[CU.username]:{em,lbl,name:CU.name,avatar:CU.avatar,color:CU.color}});
+  buildMoodGrid();
+  toast('Mood kamu: '+em+' '+lbl);
+}
+
+// ===================== PLAN =====================
+const defPlan=[];
+function buildPlan(){let plans=sg('plans')||defPlan;const el=document.getElementById('plan-list');if(!el)return;el.innerHTML=plans.map(p=>{const voted=p.votes.includes(CU.username);const vas=members.filter(m=>p.votes.includes(m.username)).slice(0,4);return `<div class="pc" style="background:${p.bg};backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);"><div class="pt"><div class="pi" style="background:rgba(255,255,255,.10)">${p.icon}</div><div><div class="pn">${p.name}</div><div class="pd2">📅 ${p.date}</div></div></div><div class="pdsc">${p.desc}</div><div class="pf">${vas.map((m,i)=>`<div class="pv" style="background:${m.color};margin-left:${i?'-4px':'0'}">${m.avatar}</div>`).join('')}<span class="pvc">${p.votes.length} vote</span><button class="vb ${voted?'voted':''}" onclick="votePlan(${p.id})">${voted?'✓ Voted':'Vote!'}</button></div></div>`;}).join('');}
+function votePlan(id){let plans=sg('plans')||defPlan;const p=plans.find(x=>x.id===id);if(!p)return;if(p.votes.includes(CU.username)){p.votes=p.votes.filter(u=>u!==CU.username);}else{p.votes.push(CU.username);}ss('plans',plans);buildPlan();toast(p.votes.includes(CU.username)?'Vote masuk! 🎉':'Vote dibatalkan');}
+
+// ===================== TOAST =====================
+function toast(msg,dur=2400){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),dur);}
+
+// ===================== INIT =====================
+initScene();checkSession();
+</script>
+</body>
+</html>
