@@ -339,6 +339,65 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
 
 /* BIRTHDAY PAGE */
 .bday-w{max-width:700px;margin:0 auto;padding:22px 18px 40px;}
+
+/* ===== PROFILE ===== */
+.profile-w{max-width:500px;margin:0 auto;padding:24px 18px 40px;}
+.profile-card{
+  background:rgba(255,255,255,.085);backdrop-filter:blur(28px);
+  border:1px solid rgba(255,255,255,.18);border-radius:24px;
+  padding:28px 24px;text-align:center;margin-bottom:16px;
+  box-shadow:var(--inset),0 8px 32px rgba(0,0,0,.2);
+}
+.profile-av-wrap{position:relative;display:inline-block;margin-bottom:16px;}
+.profile-av{
+  width:90px;height:90px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.6rem;border:3px solid rgba(255,255,255,.25);
+  box-shadow:0 0 20px rgba(192,132,252,.3);
+  overflow:hidden;cursor:pointer;position:relative;
+  background:linear-gradient(135deg,#9333ea,#ec4899);
+}
+.profile-av img{width:100%;height:100%;object-fit:cover;}
+.profile-av-edit{
+  position:absolute;inset:0;background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .2s;border-radius:50%;
+  font-size:.7rem;font-weight:800;color:#fff;cursor:pointer;
+  flex-direction:column;gap:2px;
+}
+.profile-av-wrap:hover .profile-av-edit{opacity:1;}
+.profile-name{font-family:'Syne','Arial Black',sans-serif;font-size:1.3rem;font-weight:900;margin-bottom:4px;}
+.profile-uname{font-size:.76rem;color:var(--text3);font-weight:600;margin-bottom:4px;}
+.profile-dob{font-size:.72rem;color:var(--pink);font-weight:700;}
+.profile-info-row{display:flex;gap:10px;margin-top:16px;}
+.profile-info-box{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;text-align:center;}
+.profile-info-num{font-family:'Pacifico',cursive;font-size:1.4rem;color:var(--pink);}
+.profile-info-lbl{font-size:.6rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.profile-section{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;margin-bottom:12px;}
+.profile-sec-title{font-size:.68rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
+.profile-logout-btn{
+  width:100%;padding:13px;background:rgba(251,113,133,.12);
+  border:1px solid rgba(251,113,133,.25);border-radius:13px;
+  color:#fb7185;font-family:'Nunito','Segoe UI',Arial,sans-serif;
+  font-weight:800;font-size:.92rem;cursor:pointer;transition:all .22s;
+}
+.profile-logout-btn:hover{background:rgba(251,113,133,.22);}
+
+/* Crop modal */
+.crop-modal-ov{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);
+  backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.crop-modal-ov.open{display:flex;}
+.crop-container{position:relative;width:280px;height:280px;border-radius:50%;overflow:hidden;
+  border:3px solid rgba(192,132,252,.6);box-shadow:0 0 30px rgba(192,132,252,.3);}
+.crop-img{position:absolute;cursor:move;user-select:none;touch-action:none;}
+.crop-controls{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.crop-zoom-row{display:flex;align-items:center;gap:10px;}
+.crop-zoom-lbl{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.6);}
+.crop-zoom-slider{width:160px;accent-color:#c084fc;}
+.crop-btns{display:flex;gap:10px;}
+.crop-btn{padding:10px 22px;border:none;border-radius:12px;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;transition:all .2s;}
+.crop-btn.ok{background:linear-gradient(135deg,#9333ea,#ec4899);color:#fff;box-shadow:0 3px 14px rgba(147,51,234,.4);}
+.crop-btn.cancel{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);}
 .pg-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
 .pg-title{font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:1.4rem;font-weight:900;background:linear-gradient(135deg,#fff,#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .pg-sub{font-size:.73rem;color:var(--text3);font-weight:600;margin-top:2px;}
@@ -877,9 +936,10 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
           <button class="nb" onclick="goPage('mood',this)">💭 Mood</button>
           <button class="nb" onclick="goPage('plan',this)">📅 Plan</button>
           <button class="nb" onclick="goPage('birthday',this)">🎂 Ultah</button>
+          <button class="nb" onclick="goPage('profile',this)">👤 Profil</button>
         </div>
         <div class="nav-r">
-          <div class="nav-av" id="nav-av">✨</div>
+          <div class="nav-av" id="nav-av" onclick="goPage('profile',document.querySelectorAll('.nb')[7])" style="cursor:pointer;overflow:hidden;" title="Lihat Profil">✨</div>
           <div class="nav-name" id="nav-name">-</div>
           <button class="out-btn" onclick="doLogout()">Keluar</button>
         </div>
@@ -1031,7 +1091,51 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
           </div>
         </div>
 
+        <!-- PROFILE -->
+        <div class="page" id="page-profile">
+          <div class="profile-w">
+            <div class="profile-card">
+              <div class="profile-av-wrap">
+                <div class="profile-av" id="profile-av-el" onclick="document.getElementById('profile-photo-inp').click()">
+                  <span id="profile-av-emoji">✨</span>
+                  <img id="profile-av-img" src="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+                </div>
+                <div class="profile-av-edit" onclick="document.getElementById('profile-photo-inp').click()">
+                  📷<span style="font-size:.55rem">Ganti Foto</span>
+                </div>
+              </div>
+              <input type="file" id="profile-photo-inp" accept="image/*" style="display:none" onchange="handleProfilePhoto(this)">
+              <div class="profile-name" id="profile-name-el">-</div>
+              <div class="profile-uname" id="profile-uname-el">@-</div>
+              <div class="profile-dob" id="profile-dob-el">🎂 -</div>
+              <div class="profile-info-row">
+                <div class="profile-info-box"><div class="profile-info-num" id="pstat-ken">0</div><div class="profile-info-lbl">Kenangan</div></div>
+                <div class="profile-info-box"><div class="profile-info-num" id="pstat-wish">0</div><div class="profile-info-lbl">Wishlist</div></div>
+                <div class="profile-info-box"><div class="profile-info-num" id="pstat-plan">0</div><div class="profile-info-lbl">Plan</div></div>
+              </div>
+            </div>
+            <button class="profile-logout-btn" onclick="doLogout()">🚪 Keluar dari Squad</button>
+          </div>
+        </div>
+
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- CROP MODAL -->
+<div class="crop-modal-ov" id="crop-modal">
+  <div class="crop-container" id="crop-container">
+    <img id="crop-img" class="crop-img" src="" draggable="false">
+  </div>
+  <div class="crop-controls">
+    <div class="crop-zoom-row">
+      <span class="crop-zoom-lbl">🔍 Zoom</span>
+      <input type="range" class="crop-zoom-slider" id="crop-zoom" min="1" max="3" step="0.05" value="1" oninput="updateCrop()">
+    </div>
+    <div class="crop-btns">
+      <button class="crop-btn cancel" onclick="closeCrop()">Batal</button>
+      <button class="crop-btn ok" onclick="confirmCrop()">Pakai Foto ✅</button>
     </div>
   </div>
 </div>
@@ -1462,6 +1566,9 @@ window._onFirebaseReady = async function(){
     if(fbMembers){
       members = Object.values(fbMembers).filter(m=>m.username);
       ss('members', members);
+      // Restore user photo from Firebase
+      const myMem=members.find(m=>m.username===CU.username);
+      if(myMem&&myMem.photo&&!CU.photo){CU.photo=myMem.photo;ss('session',CU);}
     }
     // Update member lastSeen
     if(CU.username){
@@ -1585,8 +1692,8 @@ function checkSession(){
 
 // ===================== APP SETUP =====================
 function setupApp(){
-  document.getElementById('nav-av').textContent=CU.avatar;
   document.getElementById('nav-name').textContent=CU.name.split(' ')[0];
+  updateAvatarDisplay();
   // Stats semua mulai 0 dulu, akan update otomatis dari Firebase listeners
   ['stat-members','stat-ken','stat-plan','stat-msgs'].forEach(id=>{
     const el=document.getElementById(id);
@@ -1624,11 +1731,12 @@ function setupApp(){
 // ===================== NAV =====================
 function goPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>{p.style.display='none';p.classList.remove('active');});
-  const pg=document.getElementById('page-'+id);pg.style.display='block';pg.classList.add('active');
+  const pg=document.getElementById('page-'+id);if(!pg)return;pg.style.display='block';pg.classList.add('active');
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  const u={home:'beranda',chat:'chat',kenangan:'kenangan',wishlist:'wishlist',mood:'mood',plan:'plan',birthday:'ultah'};
+  const u={home:'beranda',chat:'chat',kenangan:'kenangan',wishlist:'wishlist',mood:'mood',plan:'plan',birthday:'ultah',profile:'profil'};
   document.getElementById('bf-url').textContent='crazy-squad.private / '+(u[id]||id);
+  if(id==='profile')buildProfile();
 }
 
 // ===================== COUNTDOWN (event-based) =====================
@@ -2267,6 +2375,179 @@ function votePlan(id){
   buildPlan();
   if(window._fbReady) fbSet('squad/plans',plans);
   toast((p.votes||[]).includes(CU.username)?'Vote masuk! 🎉':'Vote dibatalkan');
+}
+
+// ===================== PROFILE =====================
+function buildProfile(){
+  if(!CU)return;
+  const MONTHS=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  document.getElementById('profile-name-el').textContent=CU.name;
+  document.getElementById('profile-uname-el').textContent='@'+CU.username;
+  if(CU.dob){
+    const d=new Date(CU.dob);
+    document.getElementById('profile-dob-el').textContent='🎂 '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
+  }
+  // stats
+  const myKen=(kenList||[]).filter(k=>k.addedBy===CU.username).length;
+  const myWish=((wishData||{})[CU.username]||[]).length;
+  const myPlan=(sg('plans')||[]).filter(p=>p.addedBy===CU.username).length;
+  const psk=document.getElementById('pstat-ken');if(psk)psk.textContent=myKen;
+  const psw=document.getElementById('pstat-wish');if(psw)psw.textContent=myWish;
+  const psp=document.getElementById('pstat-plan');if(psp)psp.textContent=myPlan;
+  // avatar — foto atau emoji
+  updateAvatarDisplay();
+}
+
+function updateAvatarDisplay(){
+  const imgEl=document.getElementById('profile-av-img');
+  const emojiEl=document.getElementById('profile-av-emoji');
+  const navAv=document.getElementById('nav-av');
+  if(CU.photo){
+    if(imgEl){imgEl.src=CU.photo;imgEl.style.display='block';}
+    if(emojiEl)emojiEl.style.display='none';
+    // update nav avatar dengan foto
+    if(navAv){
+      navAv.innerHTML='<img src="'+CU.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    }
+  } else {
+    if(imgEl)imgEl.style.display='none';
+    if(emojiEl){emojiEl.style.display='';emojiEl.textContent=CU.avatar;}
+    if(navAv){navAv.innerHTML=CU.avatar;navAv.style.fontSize='.84rem';}
+  }
+  // update avatar di sidebar chat
+  const sbAv=document.querySelector('#sb-members .sm.active .sm-av');
+  if(sbAv&&CU.photo)sbAv.innerHTML='<img src="'+CU.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+}
+
+// ── PHOTO UPLOAD + CROP ──
+let cropState={img:null,x:0,y:0,scale:1,dragging:false,startX:0,startY:0,origX:0,origY:0};
+
+function handleProfilePhoto(input){
+  const file=input.files[0];if(!file)return;
+  if(!file.type.startsWith('image/')){toast('File harus berupa gambar! 📷');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    openCrop(e.target.result);
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+
+function openCrop(src){
+  const modal=document.getElementById('crop-modal');
+  const img=document.getElementById('crop-img');
+  modal.classList.add('open');
+  img.src=src;
+  cropState={img:src,x:0,y:0,scale:1,dragging:false,startX:0,startY:0,origX:0,origY:0};
+  document.getElementById('crop-zoom').value=1;
+  img.onload=()=>centerCropImg();
+}
+
+function centerCropImg(){
+  const container=document.getElementById('crop-container');
+  const img=document.getElementById('crop-img');
+  const cw=container.offsetWidth, ch=container.offsetHeight;
+  const iw=img.naturalWidth, ih=img.naturalHeight;
+  const scale=Math.max(cw/iw, ch/ih);
+  cropState.scale=scale;
+  document.getElementById('crop-zoom').min=scale;
+  document.getElementById('crop-zoom').value=scale;
+  cropState.x=(cw-iw*scale)/2;
+  cropState.y=(ch-ih*scale)/2;
+  applyCropTransform();
+}
+
+function applyCropTransform(){
+  const img=document.getElementById('crop-img');
+  img.style.transform='translate('+cropState.x+'px,'+cropState.y+'px) scale(1)';
+  img.style.width=document.getElementById('crop-img').naturalWidth*cropState.scale+'px';
+  img.style.height=document.getElementById('crop-img').naturalHeight*cropState.scale+'px';
+  img.style.left='0';img.style.top='0';
+  img.style.transform='translate('+cropState.x+'px,'+cropState.y+'px)';
+}
+
+function updateCrop(){
+  const container=document.getElementById('crop-container');
+  const img=document.getElementById('crop-img');
+  const newScale=parseFloat(document.getElementById('crop-zoom').value);
+  const cx=container.offsetWidth/2, cy=container.offsetHeight/2;
+  // zoom toward center
+  cropState.x=cx-(cx-cropState.x)*(newScale/cropState.scale);
+  cropState.y=cy-(cy-cropState.y)*(newScale/cropState.scale);
+  cropState.scale=newScale;
+  img.style.width=img.naturalWidth*newScale+'px';
+  img.style.height=img.naturalHeight*newScale+'px';
+  img.style.transform='translate('+cropState.x+'px,'+cropState.y+'px)';
+}
+
+// Drag to pan
+(function setupCropDrag(){
+  function onDown(e){
+    cropState.dragging=true;
+    const pt=e.touches?e.touches[0]:e;
+    cropState.startX=pt.clientX-cropState.x;
+    cropState.startY=pt.clientY-cropState.y;
+  }
+  function onMove(e){
+    if(!cropState.dragging)return;
+    e.preventDefault();
+    const pt=e.touches?e.touches[0]:e;
+    cropState.x=pt.clientX-cropState.startX;
+    cropState.y=pt.clientY-cropState.startY;
+    const img=document.getElementById('crop-img');
+    if(img)img.style.transform='translate('+cropState.x+'px,'+cropState.y+'px)';
+  }
+  function onUp(){cropState.dragging=false;}
+  document.addEventListener('DOMContentLoaded',()=>{
+    const img=document.getElementById('crop-img');
+    if(!img)return;
+    img.addEventListener('mousedown',onDown);
+    img.addEventListener('touchstart',onDown,{passive:false});
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onUp);
+    document.addEventListener('touchend',onUp);
+  });
+})();
+
+function closeCrop(){
+  document.getElementById('crop-modal').classList.remove('open');
+}
+
+async function confirmCrop(){
+  const container=document.getElementById('crop-container');
+  const img=document.getElementById('crop-img');
+  const cw=container.offsetWidth, ch=container.offsetHeight;
+  // Draw crop to canvas
+  const canvas=document.createElement('canvas');
+  canvas.width=300;canvas.height=300;
+  const ctx=canvas.getContext('2d');
+  ctx.beginPath();ctx.arc(150,150,150,0,Math.PI*2);ctx.clip();
+  const iw=img.naturalWidth*cropState.scale;
+  const ih=img.naturalHeight*cropState.scale;
+  const sx=cropState.x, sy=cropState.y;
+  // scale to fit 300x300 output
+  const ratio=300/cw;
+  ctx.drawImage(img, sx*ratio, sy*ratio, iw*ratio, ih*ratio);
+  // compress to max 2MB (try quality 0.85 first, reduce if needed)
+  let quality=0.85;
+  let dataUrl=canvas.toDataURL('image/jpeg',quality);
+  // estimate size: base64 length * 0.75
+  while(dataUrl.length*0.75 > 2*1024*1024 && quality > 0.2){
+    quality-=0.1;
+    dataUrl=canvas.toDataURL('image/jpeg',quality);
+  }
+  closeCrop();
+  // Save to user
+  CU.photo=dataUrl;
+  ss('session',CU);
+  // sync ke Firebase
+  if(window._fbReady){
+    await fbUpdate('squad/members/'+CU.username,{photo:dataUrl});
+  }
+  updateAvatarDisplay();
+  buildProfile();
+  toast('Foto profil diperbarui! 📷');
 }
 
 // ===================== TOAST =====================
