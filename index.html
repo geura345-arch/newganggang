@@ -31,18 +31,29 @@ const auth   = getAuth(app);
 window._fb = { db, ref, set, get, onValue, push, update, remove, serverTimestamp, auth, signInAnonymously };
 window._fbReady = false;
 
-// Sign in anonymously — Firebase Auth wajib aktif (Anonymous sign-in)
-signInAnonymously(auth).then(()=>{
-  window._fbReady = true;
-  window._fbUID   = auth.currentUser?.uid || null;
-  console.log('Firebase ready, uid:', window._fbUID);
-  // Trigger app to switch from localStorage to Firebase
-  if(window._onFirebaseReady) window._onFirebaseReady();
-}).catch(e=>{
-  console.warn('Firebase anonymous auth gagal, fallback ke localStorage:', e.message);
-  window._fbReady = false;
-  if(window._onFirebaseReady) window._onFirebaseReady();
-});
+// FIX: Deteksi file:// protocol — Firebase Auth tidak support di file://
+// Solusi permanen: host di http://localhost atau GitHub Pages
+async function initFirebaseAuth(){
+  if(location.protocol === 'file:'){
+    console.warn('⚠️ File protocol terdeteksi. Firebase Auth butuh HTTP/HTTPS. Gunakan GitHub Pages atau http://localhost.');
+    window._fbReady = false;
+    window._fbAuthSkipped = true;
+    if(window._onFirebaseReady) window._onFirebaseReady();
+    return;
+  }
+  try {
+    await signInAnonymously(auth);
+    window._fbReady = true;
+    window._fbUID   = auth.currentUser?.uid || null;
+    console.log('✅ Firebase ready, uid:', window._fbUID);
+    if(window._onFirebaseReady) window._onFirebaseReady();
+  } catch(e){
+    console.warn('⚠️ Firebase auth gagal, fallback ke localStorage:', e.message);
+    window._fbReady = false;
+    if(window._onFirebaseReady) window._onFirebaseReady();
+  }
+}
+initFirebaseAuth();
 </script>
 <style>
 /* Primary: Google Fonts */
@@ -382,6 +393,60 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
   font-weight:800;font-size:.92rem;cursor:pointer;transition:all .22s;
 }
 .profile-logout-btn:hover{background:rgba(251,113,133,.22);}
+
+/* ===== ADMIN PANEL ===== */
+.admin-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(251,191,36,.18));
+  border:1px solid rgba(245,158,11,.4);border-radius:50px;
+  padding:3px 12px;font-size:.68rem;font-weight:800;color:#fbbf24;
+  margin-top:6px;letter-spacing:1px;text-transform:uppercase;
+}
+.admin-w{max-width:640px;margin:0 auto;padding:24px 18px 40px;}
+.admin-header{
+  background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(251,191,36,.12));
+  backdrop-filter:blur(28px);border:1px solid rgba(245,158,11,.35);
+  border-radius:20px;padding:20px 22px;margin-bottom:16px;
+  display:flex;align-items:center;gap:14px;
+}
+.admin-icon{font-size:2.2rem;}
+.admin-title{font-family:'Syne','Arial Black',sans-serif;font-size:1.2rem;font-weight:900;color:#fbbf24;margin-bottom:2px;}
+.admin-sub{font-size:.72rem;color:rgba(255,255,255,.55);font-weight:600;}
+.admin-section{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;margin-bottom:12px;}
+.admin-sec-title{font-size:.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.admin-member-card{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;
+  margin-bottom:8px;transition:all .2s;
+}
+.admin-member-card.muted{opacity:.55;border-color:rgba(251,113,133,.2);background:rgba(251,113,133,.06);}
+.admin-member-card:last-child{margin-bottom:0;}
+.admin-m-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;border:2px solid rgba(255,255,255,.14);overflow:hidden;}
+.admin-m-info{flex:1;min-width:0;}
+.admin-m-name{font-weight:800;font-size:.86rem;}
+.admin-m-uname{font-size:.64rem;color:var(--text3);font-weight:600;}
+.admin-m-status{font-size:.6rem;font-weight:800;margin-top:2px;}
+.admin-m-status.muted{color:#fb7185;}
+.admin-m-status.online{color:#4ade80;}
+.admin-actions{display:flex;gap:5px;flex-shrink:0;}
+.admin-btn{border:none;border-radius:8px;padding:5px 9px;font-size:.66rem;font-weight:800;cursor:pointer;transition:all .18s;}
+.admin-btn.mute{background:rgba(251,191,36,.14);color:#fbbf24;border:1px solid rgba(251,191,36,.25);}
+.admin-btn.mute:hover,.admin-btn.mute.active{background:rgba(251,113,133,.2);color:#fb7185;border-color:rgba(251,113,133,.3);}
+.admin-btn.del{background:rgba(251,113,133,.12);color:#fb7185;border:1px solid rgba(251,113,133,.2);}
+.admin-btn.del:hover{background:rgba(251,113,133,.25);}
+.admin-btn.view{background:rgba(192,132,252,.12);color:#c084fc;border:1px solid rgba(192,132,252,.2);}
+.admin-btn.view:hover{background:rgba(192,132,252,.22);}
+.admin-stat-row{display:flex;gap:8px;margin-bottom:14px;}
+.admin-stat{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:11px;text-align:center;}
+.admin-stat-num{font-family:'Pacifico',cursive;font-size:1.5rem;color:#fbbf24;}
+.admin-stat-lbl{font-size:.58rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.admin-log{background:rgba(0,0,0,.25);border-radius:10px;padding:10px;max-height:120px;overflow-y:auto;font-size:.68rem;color:var(--text2);scrollbar-width:thin;}
+.admin-log-item{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.admin-log-item:last-child{border:none;}
+.admin-announce-inp{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 12px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-size:.84rem;font-weight:600;outline:none;margin-bottom:8px;resize:none;height:70px;}
+.admin-announce-inp:focus{border-color:rgba(245,158,11,.4);}
+.admin-send-btn{background:linear-gradient(135deg,#d97706,#fbbf24);border:none;border-radius:10px;padding:9px 18px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;transition:all .2s;}
+.admin-send-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(217,119,6,.4);}
 
 /* Crop modal */
 .crop-modal-ov{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);
@@ -942,6 +1007,7 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
           <button class="nb" onclick="goPage('plan',this)">📅 Plan</button>
           <button class="nb" onclick="goPage('birthday',this)">🎂 Ultah</button>
           <button class="nb" onclick="goPage('profile',this)">👤 Profil</button>
+          <button class="nb" id="admin-nb" style="display:none;color:#fbbf24;" onclick="goPage('admin',this)">👑 Admin</button>
         </div>
         <div class="nav-r">
           <div class="nav-av" id="nav-av" onclick="goPage('profile',document.querySelectorAll('.nb')[7])" style="cursor:pointer;overflow:hidden;" title="Lihat Profil">✨</div>
@@ -1123,6 +1189,50 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
           </div>
         </div>
 
+        <!-- ADMIN PANEL -->
+        <div class="page" id="page-admin">
+          <div class="admin-w">
+            <div class="admin-header">
+              <div class="admin-icon">👑</div>
+              <div>
+                <div class="admin-title">Admin Panel</div>
+                <div class="admin-sub">Kelola squad dengan bijak ya! 💜</div>
+              </div>
+            </div>
+            <!-- Stats -->
+            <div class="admin-stat-row">
+              <div class="admin-stat"><div class="admin-stat-num" id="adm-stat-members">0</div><div class="admin-stat-lbl">Member</div></div>
+              <div class="admin-stat"><div class="admin-stat-num" id="adm-stat-msgs">0</div><div class="admin-stat-lbl">Pesan</div></div>
+              <div class="admin-stat"><div class="admin-stat-num" id="adm-stat-ken">0</div><div class="admin-stat-lbl">Kenangan</div></div>
+              <div class="admin-stat"><div class="admin-stat-num" id="adm-stat-online">0</div><div class="admin-stat-lbl">Online</div></div>
+            </div>
+            <!-- Broadcast -->
+            <div class="admin-section">
+              <div class="admin-sec-title">📢 Kirim Pengumuman ke Chat</div>
+              <textarea class="admin-announce-inp" id="adm-announce" placeholder="Tulis pengumuman untuk squad..."></textarea>
+              <button class="admin-send-btn" onclick="adminAnnounce()">📢 Kirim Pengumuman</button>
+            </div>
+            <!-- Member management -->
+            <div class="admin-section">
+              <div class="admin-sec-title">👥 Kelola Member</div>
+              <div id="adm-members-list"></div>
+            </div>
+            <!-- Activity log -->
+            <div class="admin-section">
+              <div class="admin-sec-title">📋 Log Aktivitas</div>
+              <div class="admin-log" id="adm-log"><div style="color:var(--text3);font-size:.7rem;">Belum ada aktivitas...</div></div>
+            </div>
+            <!-- Danger zone -->
+            <div class="admin-section" style="border-color:rgba(251,113,133,.2);">
+              <div class="admin-sec-title" style="color:rgba(251,113,133,.6);">⚠️ Danger Zone</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="admin-btn del" onclick="adminClearOldChats()" style="padding:8px 14px;font-size:.74rem;">🗑️ Hapus Chat Lama (&gt;1 bulan)</button>
+                <button class="admin-btn view" onclick="adminExportData()" style="padding:8px 14px;font-size:.74rem;">📥 Export Data Squad</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1256,6 +1366,9 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
 <script>
 // ===================== CONFIG =====================
 const PW='Iniwebsitekitabersama65*';
+const ADMIN_PW='Ptnwg6210';
+const ADMIN_USERNAME='goldi_aprilando_gresson';
+const ADMIN_NAME='Goldi Aprilando Gresson';
 const AVS=['🌙','🌺','🍀','🌻','✨','🦋','🌸','🎀','🌈'];
 const AVC=['linear-gradient(135deg,#9333ea,#a855f7)','linear-gradient(135deg,#ec4899,#f472b6)','linear-gradient(135deg,#6366f1,#818cf8)','linear-gradient(135deg,#0ea5e9,#38bdf8)','linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#ef4444,#f87171)','linear-gradient(135deg,#8b5cf6,#c084fc)','linear-gradient(135deg,#06b6d4,#67e8f9)'];
 const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -1424,7 +1537,8 @@ async function doMasuk(){
   document.getElementById('li-pw').classList.remove('err');
 
   if(name.length<2){markErr('li-name','Nama minimal 2 karakter ya!');return;}
-  if(pw!==PW){markErr('li-pw','Password salah! Tanya temen kamu 🔐');return;}
+  const isAdminLogin = pw===ADMIN_PW;
+  if(pw!==PW && !isAdminLogin){markErr('li-pw','Password salah! Tanya temen kamu 🔐');return;}
 
   // Cek apakah akun dengan nama ini ada
   const username=genUname(name);
@@ -1455,7 +1569,8 @@ async function doDaftar(){
 
   if(name.length<2){markErr('rd-name','Nama minimal 2 karakter ya!');return;}
   if(!dob){markErr('rd-dob','Tanggal lahir wajib diisi 🎂');return;}
-  if(pw!==PW){markErr('rd-pw','Password salah! Tanya temen kamu 🔐');return;}
+  if(pw===ADMIN_PW&&genUname(name)!==ADMIN_USERNAME){markErr('rd-pw','Password ini khusus admin!');return;}
+  if(pw!==PW&&pw!==ADMIN_PW){markErr('rd-pw','Password salah! Tanya temen kamu 🔐');return;}
 
   const username=genUname(name);
   let mems=sg('members')||[];
@@ -1493,6 +1608,8 @@ function finishLogin(user, mems){
   const remCb=document.getElementById('remember-me');
   const remember=remCb?remCb.checked:true;
   localStorage.setItem('cs_remember', remember?'true':'false');
+  // Tag admin
+  user.isAdmin = (user.username===ADMIN_USERNAME);
   CU=user; members=mems; ss('session',user);
 
   document.getElementById('load-ov').style.display='flex';
@@ -1736,6 +1853,9 @@ function setupApp(){
   if(localWish.me){ delete localWish.me; ss('wishlist', localWish); }
 
   loadMsgs();buildSidebar();buildMoodGrid();buildHomeMembers();buildWishlist();buildPlan();buildKen();startCd();buildBdayPage();buildBdayBanner();
+  setupAdminUI();
+  // Sync muted list dari Firebase
+  if(window._fbReady)fbListen('squad/admin/muted',(data)=>{ss('admin_muted',data||[]);});
 }
 
 // ===================== NAV =====================
@@ -1747,6 +1867,7 @@ function goPage(id,btn){
   const u={home:'beranda',chat:'chat',kenangan:'kenangan',wishlist:'wishlist',mood:'mood',plan:'plan',birthday:'ultah',profile:'profil'};
   document.getElementById('bf-url').textContent='crazy-squad.private / '+(u[id]||id);
   if(id==='profile')buildProfile();
+  if(id==='admin'){if(!isAdmin()){goPage('home',document.querySelectorAll('.nb')[0]);toast('⛔ Akses ditolak!');return;}buildAdminPanel();}
 }
 
 // ===================== COUNTDOWN (event-based) =====================
@@ -2046,6 +2167,17 @@ function renderMsgs(){
 }
 async function sendMsg(){
   const inp=document.getElementById('ci-inp');const txt=inp.value.trim();if(!txt)return;
+  // Cek mute dari Firebase
+  if(window._fbReady){
+    const mutedList=await fbGet('squad/admin/muted')||[];
+    if(Array.isArray(mutedList)&&mutedList.includes(CU.username)){
+      toast('🔇 Kamu sedang dibisukan oleh admin. Tidak bisa mengirim pesan.');
+      inp.value='';return;
+    }
+  } else if(isMuted(CU.username)){
+    toast('🔇 Kamu sedang dibisukan oleh admin.');
+    inp.value='';return;
+  }
   const m={id:++msgN,user:{name:CU.name,username:CU.username,avatar:CU.avatar,color:CU.color},
     text:txt,time:tn(),ts:Date.now(),reactions:{},sticker:false,deleted:false};
   if(replyTo){m.replyTo=replyTo;clearReply();}
@@ -2645,6 +2777,179 @@ async function confirmCrop(){
   toast('Foto profil diperbarui! 📷');
 }
 
+// ===================== ADMIN SYSTEM =====================
+function isAdmin(){return CU && CU.isAdmin===true;}
+
+function setupAdminUI(){
+  // Tampilkan tombol admin di navbar
+  const nb=document.getElementById('admin-nb');
+  if(nb)nb.style.display=isAdmin()?'':'none';
+  // Tampilkan badge admin di profil
+  const profileCard=document.querySelector('.profile-card');
+  if(profileCard&&isAdmin()){
+    if(!document.getElementById('admin-profile-badge')){
+      const badge=document.createElement('div');
+      badge.id='admin-profile-badge';
+      badge.className='admin-badge';
+      badge.innerHTML='👑 Admin';
+      profileCard.appendChild(badge);
+    }
+  }
+}
+
+function buildAdminPanel(){
+  if(!isAdmin())return;
+  // Stats
+  const onlineCount=members.filter(m=>isOnline(m.username)).length;
+  const el1=document.getElementById('adm-stat-members');if(el1)el1.textContent=members.length;
+  const el2=document.getElementById('adm-stat-msgs');if(el2)el2.textContent=msgs.filter(m=>!m.deleted).length;
+  const el3=document.getElementById('adm-stat-ken');if(el3)el3.textContent=(kenList||[]).length;
+  const el4=document.getElementById('adm-stat-online');if(el4)el4.textContent=onlineCount;
+
+  // Member list
+  const el=document.getElementById('adm-members-list');if(!el)return;
+  const mutedList=sg('admin_muted')||[];
+  el.innerHTML=members.map(m=>{
+    const isMuted=mutedList.includes(m.username);
+    const online=isOnline(m.username);
+    const isMe=m.username===CU.username;
+    const avContent=m.photo?'<img src="'+m.photo+'" style="width:100%;height:100%;object-fit:cover;">':m.avatar;
+    return '<div class="admin-member-card'+(isMuted?' muted':'')+'">'
+      +'<div class="admin-m-av" style="background:'+m.color+'">'+avContent+'</div>'
+      +'<div class="admin-m-info">'
+      +'<div class="admin-m-name">'+m.name+(isMe?' (Kamu)':'')+'</div>'
+      +'<div class="admin-m-uname">@'+m.username+'</div>'
+      +'<div class="admin-m-status '+(online?'online':'')+(isMuted?' muted':'')+'">'+
+        (isMuted?'🔇 Dibisukan':(online?'🟢 Online':'⚫ Offline'))
+      +'</div>'
+      +'</div>'
+      +(!isMe?'<div class="admin-actions">'
+        +'<button class="admin-btn mute'+(isMuted?' active':'')+'" onclick="adminToggleMute(&apos;'+m.username+'&apos;,&apos;'+m.name+'&apos;)">'+
+          (isMuted?'🔊 Unmute':'🔇 Mute')+'</button>'
+        +'<button class="admin-btn del" onclick="adminDeleteMember(&apos;'+m.username+'&apos;,&apos;'+m.name+'&apos;)">🗑️ Hapus</button>'
+        +'</div>':'')
+      +'</div>';
+  }).join('');
+
+  // Log
+  const log=sg('admin_log')||[];
+  const logEl=document.getElementById('adm-log');
+  if(logEl){
+    if(!log.length){logEl.innerHTML='<div style="color:var(--text3);font-size:.7rem;">Belum ada aktivitas...</div>';}
+    else{logEl.innerHTML=log.slice(0,20).map(l=>'<div class="admin-log-item">'+l+'</div>').join('');}
+  }
+}
+
+function adminLog(msg){
+  const log=sg('admin_log')||[];
+  const now=new Date().toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  log.unshift('['+now+'] '+msg);
+  ss('admin_log',log.slice(0,50));
+}
+
+async function adminToggleMute(username,name){
+  if(!isAdmin())return;
+  let muted=sg('admin_muted')||[];
+  const isMuted=muted.includes(username);
+  if(isMuted){
+    muted=muted.filter(u=>u!==username);
+    toast('🔊 '+name+' sudah bisa chat lagi');
+    adminLog('✅ Unmute: '+name+' (@'+username+')');
+  } else {
+    muted.push(username);
+    toast('🔇 '+name+' dibisukan dari chat');
+    adminLog('🔇 Mute: '+name+' (@'+username+')');
+  }
+  ss('admin_muted',muted);
+  // Sync ke Firebase biar semua device tau
+  if(window._fbReady) await fbSet('squad/admin/muted', muted);
+  buildAdminPanel();
+}
+
+async function adminDeleteMember(username,name){
+  if(!isAdmin())return;
+  if(!confirm('Hapus akun '+name+'? Aksi ini tidak bisa dibatalkan!'))return;
+  // Hapus dari Firebase
+  if(window._fbReady){
+    await fbRemove('squad/members/'+username);
+    await fbRemove('squad/presence/'+username);
+    await fbRemove('squad/moods/'+username);
+    await fbRemove('squad/wishlist/'+username);
+  }
+  // Hapus dari local
+  members=members.filter(m=>m.username!==username);
+  ss('members',members);
+  adminLog('🗑️ Hapus akun: '+name+' (@'+username+')');
+  toast('🗑️ Akun '+name+' berhasil dihapus');
+  buildAdminPanel();
+  buildSidebar();
+}
+
+async function adminAnnounce(){
+  if(!isAdmin())return;
+  const txt=document.getElementById('adm-announce').value.trim();
+  if(!txt){toast('Tulis pengumuman dulu!');return;}
+  const announceUser={name:'📢 Admin Squad',username:'admin_system',avatar:'👑',color:'linear-gradient(135deg,#d97706,#fbbf24)'};
+  const m={
+    id:++msgN,
+    user:announceUser,
+    text:'📢 PENGUMUMAN: '+txt,
+    time:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
+    ts:Date.now(),reactions:{},sticker:false,deleted:false,
+    isAnnounce:true
+  };
+  msgs.push(m);
+  saveMsgs();
+  if(window._fbReady) await fbPush('squad/messages',m);
+  renderMsgs();
+  document.getElementById('adm-announce').value='';
+  adminLog('📢 Kirim pengumuman: '+txt.substring(0,40));
+  toast('📢 Pengumuman terkirim ke chat!');
+  buildAdminPanel();
+}
+
+async function adminClearOldChats(){
+  if(!isAdmin())return;
+  if(!confirm('Hapus semua chat yang lebih dari 1 bulan?'))return;
+  const cutoff=Date.now()-(30*24*60*60*1000);
+  let count=0;
+  if(window._fbReady){
+    const data=await fbGet('squad/messages');
+    if(data){
+      for(const [key,msg] of Object.entries(data)){
+        if((msg.ts||0)<cutoff){await fbRemove('squad/messages/'+key);count++;}
+      }
+    }
+  }
+  adminLog('🗑️ Hapus '+count+' chat lama (>1 bulan)');
+  toast('🗑️ '+count+' pesan lama berhasil dihapus!',3500);
+  buildAdminPanel();
+}
+
+function adminExportData(){
+  if(!isAdmin())return;
+  const data={
+    exportDate:new Date().toISOString(),
+    members:members.map(m=>({name:m.name,username:m.username,dob:m.dob})),
+    totalMessages:msgs.filter(m=>!m.deleted).length,
+    kenangan:(kenList||[]).map(k=>({title:k.title,date:k.date,addedBy:k.addedBy})),
+    plans:(sg('plans')||[]).map(p=>({name:p.name,date:p.date,votes:p.votes.length}))
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='crazy-squad-data-'+new Date().toLocaleDateString('id-ID').replace(/\//g,'-')+'.json';
+  a.click();URL.revokeObjectURL(url);
+  adminLog('📥 Export data squad');
+  toast('📥 Data squad berhasil diexport!');
+}
+
+// Cek mute status sebelum kirim pesan
+function isMuted(username){
+  const muted=sg('admin_muted')||[];
+  return muted.includes(username);
+}
+
 // ===================== TOAST =====================
 function toast(msg,dur=2400){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),dur);}
 
@@ -2663,7 +2968,17 @@ if(localStorage.getItem('cs_reset_ver') !== RESET_VERSION){
   console.log('🔄 Reset selesai — semua user harus login ulang');
 }
 
-initScene();checkSession();
+initScene();
+// FIX: Deteksi file:// dan tampilkan peringatan
+if(location.protocol === 'file:'){
+  setTimeout(()=>{
+    const warn = document.createElement('div');
+    warn.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#d97706,#f59e0b);color:#fff;font-family:Nunito,sans-serif;font-size:.78rem;font-weight:700;padding:8px 16px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.3);';
+    warn.innerHTML = '⚠️ <strong>Dibuka via file://</strong> — Firebase tidak akan berfungsi. Untuk sinkronisasi data, upload ke hosting (GitHub Pages, Netlify, dll). Mode lokal: data hanya tersimpan di perangkat ini.&nbsp;<button onclick="this.parentElement.remove()" style="background:rgba(0,0,0,.2);border:none;color:#fff;border-radius:5px;padding:2px 8px;cursor:pointer;font-weight:800;">✕</button>';
+    document.body.prepend(warn);
+  }, 500);
+}
+checkSession();
 </script>
 </body>
 </html>
