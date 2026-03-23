@@ -437,8 +437,13 @@ nav{flex-shrink:0;padding:8px 18px;display:flex;align-items:center;justify-conte
 .sm.active{background:rgba(192,132,252,.11);border:1px solid rgba(192,132,252,.16);}
 .sm-av{width:29px;height:29px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;border:2px solid rgba(255,255,255,.12);}
 .sm-n{font-size:.74rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
-.sm-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.sm-dot.on{background:#4ade80;box-shadow:0 0 5px #4ade80;}
+.sm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all .4s ease;}
+.sm-dot.on{background:#4ade80;box-shadow:0 0 6px #4ade80;}
+.sm-dot.off{background:rgba(255,255,255,.2);}
+/* online badge di chat header status */
+.online-badge{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.online-badge.on{background:#4ade80;box-shadow:0 0 5px #4ade80;}
+.online-badge.off{background:rgba(255,255,255,.25);}
 .sb-feats{margin-top:auto;display:flex;flex-direction:column;gap:4px;}
 .sf{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.042);border:1px solid rgba(255,255,255,.07);transition:all .18s;font-size:.72rem;font-weight:700;color:var(--text2);}
 .sf:hover{background:rgba(192,132,252,.11);border-color:rgba(192,132,252,.18);}
@@ -980,7 +985,7 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
               <div class="sm active">
                 <div class="sm-av" style="background:linear-gradient(135deg,#9333ea,#ec4899)">💜</div>
                 <div class="sm-n">Crazy Squad</div>
-                <div class="sm-dot on"></div>
+                <div class="sm-dot on" id="group-dot"></div>
               </div>
               <div style="margin:9px 0 5px"><div class="sb-title">Online</div></div>
               <div id="sb-members"></div>
@@ -1530,10 +1535,12 @@ function transitionToApp(){
   setTimeout(()=>{
     document.getElementById('app-view').classList.add('show');
     setupApp();
+    setTimeout(startPresence, 1000); // start presence setelah Firebase ready
   },500);
 }
 
 function doLogout(){
+  stopPresence();
   // Hapus session dari kedua storage
   localStorage.removeItem('cs_session');
   sessionStorage.removeItem('cs_session');
@@ -1580,6 +1587,7 @@ window._onFirebaseReady = async function(){
     buildSidebar();buildHomeMembers();updateStats();
     buildBdayPage();buildBdayBanner();
     buildPlan();buildKen();buildWishlist();buildMoodGrid();
+    startPresence();
   }
 };
 
@@ -1661,12 +1669,14 @@ function setupRealtimeListeners(){
   // ── WISHLIST — sync wishlist per user ──
   fbListen('squad/wishlist', (data)=>{
     if(!data) return;
-    // wishlist disimpan per username
     wishData = data;
     ss('wishlist', data);
     renderWishTabs();
     renderWishList();
   });
+
+  // ── AUTO CLEAN — hapus chat >5 bulan, jalankan sekali saat login ──
+  setTimeout(autoCleanOldMessages, 3000);
 }
 
 function checkSession(){
@@ -1949,8 +1959,23 @@ function launchConfetti(){
 
 // ===================== SIDEBAR =====================
 function buildSidebar(){
-  document.getElementById('sb-members').innerHTML=members.map(m=>`<div class="sm ${m.username===CU.username?'active':''}"><div class="sm-av" style="background:${m.color}">${m.avatar}</div><div class="sm-n">${m.name.split(' ')[0]}</div><div class="sm-dot on"></div></div>`).join('');
-  document.getElementById('chat-status').textContent=members.length+' member online 🟢';
+  const onlineCount = members.filter(m=>isOnline(m.username)).length;
+  document.getElementById('sb-members').innerHTML=members.map(m=>{
+    const online = isOnline(m.username);
+    const dotClass = online ? 'on' : 'off';
+    const avContent = m.photo
+      ? '<img src="'+m.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+      : m.avatar;
+    return '<div class="sm '+(m.username===CU.username?'active':'')+'">'
+      +'<div class="sm-av" style="background:'+m.color+'">'+avContent+'</div>'
+      +'<div class="sm-n">'+m.name.split(' ')[0]+'</div>'
+      +'<div class="sm-dot '+dotClass+'"></div>'
+      +'</div>';
+  }).join('');
+  const statusTxt = onlineCount > 0
+    ? onlineCount+' online sekarang 🟢'
+    : 'Semua offline 💤';
+  document.getElementById('chat-status').textContent=statusTxt;
 }
 function buildHomeMembers(){
   const el=document.getElementById('members-home-grid');if(!members.length){el.innerHTML='';return;}
@@ -1962,6 +1987,37 @@ const STKS={love:['💜','🥰','😘','💕','💗','💓','🫶','❤️‍�
 const AUTO=['Aduhh bestie 😭💜','Setujuuu banget!!!','Hahaha iya iya 🤣','Ngakak pol 😂😂','Aduh ngantuk nih','Iya dong kita the best!','Kangen ngumpul 🥺','Sumpah deh 😤','Yasss queen 👑✨','Wiih beneran? 😱','Hahaha parah 💀','Ih iyaaa sayang 💜','Okke siap!','Kapan kapan wajib!','Wkwk relate 😭'];
 let msgs=[],msgN=100,replyTo=null,curStkCat='love';
 function tn(){return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});}
+
+// ===================== AUTO DELETE CHAT (5 BULAN) =====================
+const CHAT_EXPIRE_MS = 5 * 30 * 24 * 60 * 60 * 1000; // ~5 bulan dalam ms
+
+async function autoCleanOldMessages(){
+  if(!window._fbReady || !CU) return;
+  const now = Date.now();
+  const cutoff = now - CHAT_EXPIRE_MS;
+  // Hanya jalankan sekali per sesi, cek flag
+  if(sessionStorage.getItem('cs_clean_done')) return;
+  sessionStorage.setItem('cs_clean_done','1');
+
+  // Ambil semua pesan dari Firebase
+  const data = await fbGet('squad/messages');
+  if(!data) return;
+
+  let deleteCount = 0;
+  const entries = Object.entries(data);
+  for(const [key, msg] of entries){
+    const ts = msg.ts || 0;
+    if(ts > 0 && ts < cutoff){
+      // Hapus pesan lama dari Firebase
+      await fbRemove('squad/messages/' + key);
+      deleteCount++;
+    }
+  }
+  if(deleteCount > 0){
+    console.log('🗑️ Auto-deleted', deleteCount, 'pesan lama (>5 bulan)');
+    toast('🗑️ '+deleteCount+' pesan lama (>5 bulan) otomatis dihapus', 4000);
+  }
+}
 
 function loadMsgs(){
   msgs=sg('messages')||[];
@@ -2375,6 +2431,45 @@ function votePlan(id){
   buildPlan();
   if(window._fbReady) fbSet('squad/plans',plans);
   toast((p.votes||[]).includes(CU.username)?'Vote masuk! 🎉':'Vote dibatalkan');
+}
+
+// ===================== PRESENCE (online/offline) =====================
+let presenceInterval = null;
+
+function startPresence(){
+  if(!window._fbReady || !CU) return;
+  const presRef = 'squad/presence/' + CU.username;
+  // Set online saat masuk
+  fbSet(presRef, {online:true, name:CU.name, lastSeen:Date.now()});
+  // Update heartbeat tiap 30 detik
+  presenceInterval = setInterval(()=>{
+    if(window._fbReady) fbSet(presRef, {online:true, name:CU.name, lastSeen:Date.now()});
+  }, 30000);
+  // Set offline saat tutup browser/tab
+  window.addEventListener('beforeunload', ()=>{
+    fbSet(presRef, {online:false, name:CU.name, lastSeen:Date.now()});
+  });
+  // Listen ke semua presence
+  fbListen('squad/presence', (data)=>{
+    window._presenceData = data || {};
+    buildSidebar(); // update dot warna
+  });
+}
+
+function isOnline(username){
+  if(!window._presenceData) return false;
+  const p = window._presenceData[username];
+  if(!p) return false;
+  if(!p.online) return false;
+  // Anggap offline kalau lastSeen > 60 detik yang lalu (missed heartbeat)
+  return (Date.now() - (p.lastSeen||0)) < 60000;
+}
+
+function stopPresence(){
+  if(presenceInterval) clearInterval(presenceInterval);
+  if(window._fbReady && CU){
+    fbSet('squad/presence/'+CU.username, {online:false, name:CU.name, lastSeen:Date.now()});
+  }
 }
 
 // ===================== PROFILE =====================
