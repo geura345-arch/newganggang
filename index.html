@@ -144,6 +144,126 @@ body{font-family:'Nunito','Segoe UI','Arial Rounded MT Bold',Arial,sans-serif;}
   animation:gr 8s steps(12) infinite;}
 @keyframes gr{0%{transform:translate(0,0)}25%{transform:translate(-3%,-2%)}50%{transform:translate(3%,2%)}75%{transform:translate(-2%,3%)}100%{transform:translate(0,0)}}
 
+/* ===================== GAME - TEBAK GAMBAR ===================== */
+.game-w{max-width:900px;margin:0 auto;padding:22px 18px 48px;}
+.game-lobby{display:flex;flex-direction:column;gap:16px;}
+.game-lobby-hero{text-align:center;padding:10px 0 6px;}
+.game-lobby-icon{font-size:3.5rem;margin-bottom:8px;animation:blob 6s ease-in-out infinite;}
+.game-lobby-title{font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:1.55rem;font-weight:900;background:linear-gradient(135deg,#fff,#f0abfc 50%,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.game-lobby-sub{font-size:.82rem;color:var(--text2);font-weight:600;margin-top:5px;}
+.game-rules-card{background:rgba(255,255,255,.072);backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:16px 20px;box-shadow:var(--inset),0 4px 18px rgba(0,0,0,.14);}
+.game-rules-title{font-size:.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin-bottom:10px;}
+.game-rule-item{display:flex;align-items:flex-start;gap:9px;font-size:.8rem;font-weight:600;color:var(--text2);margin-bottom:7px;line-height:1.5;}
+.game-rule-item:last-child{margin-bottom:0;}
+.game-rule-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#ec4899);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:900;flex-shrink:0;margin-top:1px;}
+.game-players-section{background:rgba(255,255,255,.072);backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:16px 20px;box-shadow:var(--inset),0 4px 18px rgba(0,0,0,.14);}
+.game-players-title{font-size:.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.game-players-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.game-player-chip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.14);border-radius:50px;padding:6px 13px 6px 6px;transition:all .2s;cursor:default;}
+.game-player-chip.selected{background:rgba(192,132,252,.15);border-color:rgba(192,132,252,.36);}
+.game-player-chip.drawer{background:linear-gradient(135deg,rgba(147,51,234,.22),rgba(236,72,153,.16));border-color:rgba(244,114,182,.42);animation:glow-chip .8s ease-in-out infinite alternate;}
+@keyframes glow-chip{from{box-shadow:0 0 5px rgba(192,132,252,.3);}to{box-shadow:0 0 16px rgba(192,132,252,.6),0 0 28px rgba(236,72,153,.2);}}
+.game-player-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;border:2px solid rgba(255,255,255,.18);}
+.game-player-name{font-size:.76rem;font-weight:800;}
+.game-player-score{font-size:.65rem;font-weight:700;color:var(--pink);margin-left:2px;}
+.game-min-warn{font-size:.75rem;color:#fb7185;font-weight:700;text-align:center;padding:8px 12px;background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.16);border-radius:12px;}
+.game-start-btn{background:linear-gradient(135deg,#9333ea,#ec4899);border:none;border-radius:14px;padding:14px 28px;color:#fff;font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;transition:all .25s;box-shadow:0 5px 22px rgba(147,51,234,.42),inset 0 1px 0 rgba(255,255,255,.18);width:100%;letter-spacing:.5px;}
+.game-start-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 32px rgba(147,51,234,.62),inset 0 1px 0 rgba(255,255,255,.18);}
+.game-start-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+/* ACTIVE GAME */
+.game-arena{display:none;flex-direction:column;gap:14px;}
+.game-arena.show{display:flex;}
+.game-top-bar{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:10px 16px;}
+.game-round-badge{background:linear-gradient(135deg,#9333ea,#ec4899);border-radius:50px;padding:4px 12px;font-size:.68rem;font-weight:900;letter-spacing:1px;flex-shrink:0;}
+.game-drawer-info{flex:1;display:flex;align-items:center;gap:8px;}
+.game-drawer-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;border:2px solid rgba(244,114,182,.4);}
+.game-drawer-name{font-size:.82rem;font-weight:800;}
+.game-drawer-lbl{font-size:.63rem;color:var(--text3);font-weight:600;}
+.game-timer-ring{position:relative;width:52px;height:52px;flex-shrink:0;}
+.game-timer-svg{transform:rotate(-90deg);}
+.game-timer-bg{fill:none;stroke:rgba(255,255,255,.1);stroke-width:4;}
+.game-timer-fg{fill:none;stroke:url(#timerGrad);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .9s linear;}
+.game-timer-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-weight:900;font-size:.92rem;}
+.game-main{display:flex;gap:14px;}
+.game-canvas-col{flex:1;display:flex;flex-direction:column;gap:8px;}
+.game-canvas-wrap{position:relative;background:rgba(255,255,255,.96);border-radius:16px;overflow:hidden;border:2px solid rgba(192,132,252,.3);box-shadow:0 8px 32px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.12);}
+#game-canvas{display:block;cursor:crosshair;touch-action:none;}
+.game-canvas-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;background:rgba(10,0,26,.75);backdrop-filter:blur(6px);border-radius:14px;pointer-events:none;opacity:0;transition:opacity .3s;}
+.game-canvas-overlay.show{opacity:1;pointer-events:all;}
+.game-overlay-icon{font-size:3rem;}
+.game-overlay-msg{font-size:.9rem;font-weight:800;color:#fff;text-align:center;}
+.game-overlay-sub{font-size:.72rem;color:rgba(255,255,255,.6);font-weight:600;text-align:center;}
+.game-draw-tools{display:flex;align-items:center;gap:6px;padding:8px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);border-radius:12px;flex-wrap:wrap;}
+.game-color-btn{width:24px;height:24px;border-radius:50%;border:2.5px solid rgba(255,255,255,.2);cursor:pointer;transition:all .16s;flex-shrink:0;}
+.game-color-btn.active{border-color:#fff;transform:scale(1.22);box-shadow:0 0 8px rgba(255,255,255,.5);}
+.game-size-btn{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:4px 8px;font-size:.68rem;font-weight:800;cursor:pointer;color:var(--text2);transition:all .16s;}
+.game-size-btn.active{background:rgba(192,132,252,.22);border-color:rgba(192,132,252,.4);color:#fff;}
+.game-tool-sep{width:1px;height:20px;background:rgba(255,255,255,.12);margin:0 2px;}
+.game-eraser-btn{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:4px 10px;font-size:.68rem;font-weight:800;cursor:pointer;color:var(--text2);transition:all .16s;}
+.game-eraser-btn.active{background:rgba(251,113,133,.18);border-color:rgba(251,113,133,.36);color:#fb7185;}
+.game-clear-btn{background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.18);border-radius:8px;padding:4px 10px;font-size:.68rem;font-weight:800;cursor:pointer;color:#fb7185;transition:all .16s;margin-left:auto;}
+.game-clear-btn:hover{background:rgba(251,113,133,.22);}
+.game-right-col{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;}
+.game-word-box{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:13px 14px;text-align:center;}
+.game-word-label{font-size:.58rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.game-word-secret{font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,#f0abfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;word-break:break-word;line-height:1.3;}
+.game-word-hidden{font-size:1.5rem;letter-spacing:6px;color:var(--text2);}
+.game-scoreboard{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:13px 14px;flex:1;}
+.game-sb-title{font-size:.6rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:9px;}
+.game-sb-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.055);}
+.game-sb-item:last-child{border:none;}
+.game-sb-rank{font-size:.68rem;font-weight:900;color:var(--text3);width:16px;text-align:center;flex-shrink:0;}
+.game-sb-rank.gold{color:#fbbf24;}.game-sb-rank.silver{color:#94a3b8;}.game-sb-rank.bronze{color:#cd7c4a;}
+.game-sb-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.62rem;border:1.5px solid rgba(255,255,255,.14);flex-shrink:0;}
+.game-sb-name{font-size:.75rem;font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.game-sb-pts{font-size:.68rem;font-weight:900;color:var(--pink);}
+.game-guess-area{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:10px 12px;}
+.game-guess-feed{max-height:110px;overflow-y:auto;margin-bottom:8px;display:flex;flex-direction:column;gap:4px;scrollbar-width:none;}
+.game-guess-feed::-webkit-scrollbar{display:none;}
+.game-guess-item{display:flex;gap:5px;align-items:flex-start;font-size:.72rem;line-height:1.4;}
+.game-guess-name{font-weight:800;color:var(--pink);flex-shrink:0;}
+.game-guess-txt{color:var(--text2);font-weight:600;word-break:break-word;}
+.game-guess-item.correct .game-guess-txt{color:#4ade80;font-weight:800;}
+.game-guess-item.system{color:var(--violet);font-style:italic;}
+.game-guess-row{display:flex;gap:6px;}
+.game-guess-inp{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 10px;color:#fff;font-family:'Nunito','Segoe UI',Arial,sans-serif;font-size:.78rem;font-weight:600;outline:none;transition:all .2s;}
+.game-guess-inp::placeholder{color:rgba(255,255,255,.24);}
+.game-guess-inp:focus{border-color:rgba(192,132,252,.45);background:rgba(255,255,255,.12);}
+.game-guess-inp:disabled{opacity:.45;cursor:not-allowed;}
+.game-guess-send{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#ec4899);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.82rem;transition:all .2s;flex-shrink:0;}
+.game-guess-send:hover{transform:scale(1.1);}
+.game-guess-send:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+/* RESULT SCREEN */
+.game-result{display:none;flex-direction:column;align-items:center;gap:16px;padding:22px 0 10px;text-align:center;}
+.game-result.show{display:flex;}
+.game-result-title{font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:1.45rem;font-weight:900;background:linear-gradient(135deg,#fbbf24,#f0abfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.game-result-podium{display:flex;align-items:flex-end;gap:10px;margin:6px 0;}
+.game-podium-item{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.game-podium-bar{border-radius:8px 8px 0 0;width:68px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:.68rem;font-weight:900;color:#fff;}
+.game-podium-bar.p1{height:90px;background:linear-gradient(180deg,#fbbf24,#d97706);}
+.game-podium-bar.p2{height:62px;background:linear-gradient(180deg,#94a3b8,#64748b);}
+.game-podium-bar.p3{height:45px;background:linear-gradient(180deg,#cd7c4a,#92400e);}
+.game-podium-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;border:2.5px solid rgba(255,255,255,.25);}
+.game-podium-name{font-size:.72rem;font-weight:800;max-width:70px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.game-podium-pts{font-size:.68rem;color:var(--pink);font-weight:900;}
+.game-result-list{width:100%;max-width:320px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:10px 14px;}
+.game-res-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.game-res-item:last-child{border:none;}
+.game-res-rank{font-size:.7rem;font-weight:900;width:18px;color:var(--text3);}
+.game-res-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;border:1.5px solid rgba(255,255,255,.16);}
+.game-res-name{flex:1;font-size:.78rem;font-weight:800;text-align:left;}
+.game-res-pts{font-size:.72rem;font-weight:900;color:var(--pink);}
+.game-play-again-btn{background:linear-gradient(135deg,#9333ea,#ec4899);border:none;border-radius:12px;padding:12px 28px;color:#fff;font-family:'Syne','Segoe UI Semibold','Arial Black',sans-serif;font-size:.92rem;font-weight:800;cursor:pointer;transition:all .22s;box-shadow:0 4px 18px rgba(147,51,234,.38),inset 0 1px 0 rgba(255,255,255,.16);}
+.game-play-again-btn:hover{transform:translateY(-2px);box-shadow:0 7px 26px rgba(147,51,234,.56),inset 0 1px 0 rgba(255,255,255,.16);}
+.game-correct-flash{animation:correctFlash .5s ease both;}
+@keyframes correctFlash{0%,100%{background:rgba(255,255,255,.07);}50%{background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.38);}}
+/* Mobile adjustments */
+@media(max-width:640px){
+  .game-main{flex-direction:column;}
+  .game-right-col{width:100%;}
+  .game-guess-feed{max-height:80px;}
+}
+
 /* ===================== LOGIN PAGE ===================== */
 #login-view{
   position:fixed;inset:0;z-index:10;
@@ -1007,6 +1127,7 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
           <button class="nb" onclick="goPage('plan',this)">📅 Plan</button>
           <button class="nb" onclick="goPage('birthday',this)">🎂 Ultah</button>
           <button class="nb" onclick="goPage('profile',this)">👤 Profil</button>
+          <button class="nb" onclick="goPage('game',this)">🎨 Game</button>
           <button class="nb" id="admin-nb" style="display:none;color:#fbbf24;" onclick="goPage('admin',this)">👑 Admin</button>
         </div>
         <div class="nav-r">
@@ -1230,6 +1351,146 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
                 <button class="admin-btn view" onclick="adminExportData()" style="padding:8px 14px;font-size:.74rem;">📥 Export Data Squad</button>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- GAME TEBAK GAMBAR -->
+        <div class="page" id="page-game">
+          <div class="game-w">
+            <div class="pg-hdr">
+              <div><div class="pg-title">Game Tebak Gambar 🎨</div><div class="pg-sub">Gambar, tebak, dan menangkan ronde!</div></div>
+            </div>
+
+            <!-- SVG gradient for timer -->
+            <svg width="0" height="0" style="position:absolute;">
+              <defs>
+                <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color:#9333ea"/>
+                  <stop offset="100%" style="stop-color:#ec4899"/>
+                </linearGradient>
+              </defs>
+            </svg>
+
+            <!-- LOBBY -->
+            <div class="game-lobby" id="game-lobby">
+              <div class="game-lobby-hero">
+                <div class="game-lobby-icon">🎨</div>
+                <div class="game-lobby-title">Tebak Gambar Squad!</div>
+                <div class="game-lobby-sub">Satu orang menggambar, yang lain menebak — siapa paling cepat?</div>
+              </div>
+
+              <div class="game-rules-card">
+                <div class="game-rules-title">📋 Cara Bermain</div>
+                <div class="game-rule-item"><div class="game-rule-num">1</div><span>Sistem memilih satu pemain secara acak bergiliran untuk <strong>menggambar</strong>.</span></div>
+                <div class="game-rule-item"><div class="game-rule-num">2</div><span>Pemain yang terpilih mendapat <strong>kata rahasia</strong> dan harus menggambarnya tanpa menulis huruf/angka.</span></div>
+                <div class="game-rule-item"><div class="game-rule-num">3</div><span>Pemain lain mengetik tebakan di kolom chat. Tebak <strong>lebih cepat = poin lebih banyak!</strong></span></div>
+                <div class="game-rule-item"><div class="game-rule-num">4</div><span>Setiap ronde berlangsung <strong>60 detik</strong>. Setelah semua ronde selesai, skor tertinggi menang! 🏆</span></div>
+              </div>
+
+              <div class="game-players-section">
+                <div class="game-players-title">
+                  <span>👥 Pemain Aktif</span>
+                  <span id="game-player-count" style="color:var(--text2);font-size:.72rem;font-weight:700;letter-spacing:0;">0 pemain</span>
+                </div>
+                <div class="game-players-grid" id="game-players-grid"></div>
+              </div>
+
+              <div id="game-min-warn" class="game-min-warn" style="display:none;">
+                ⚠️ Butuh minimal <strong>5 pemain</strong> untuk mulai. Sekarang ada <span id="game-cur-count">0</span> pemain.
+              </div>
+
+              <button class="game-start-btn" id="game-start-btn" onclick="gameStart()" disabled>
+                🎮 Mulai Game!
+              </button>
+            </div>
+
+            <!-- ACTIVE GAME ARENA -->
+            <div class="game-arena" id="game-arena">
+              <!-- Top bar: round info + timer -->
+              <div class="game-top-bar">
+                <div class="game-round-badge" id="game-round-badge">Ronde 1</div>
+                <div class="game-drawer-info">
+                  <div class="game-drawer-av" id="game-drawer-av">✨</div>
+                  <div>
+                    <div class="game-drawer-name" id="game-drawer-name">-</div>
+                    <div class="game-drawer-lbl">Sedang menggambar</div>
+                  </div>
+                </div>
+                <div class="game-timer-ring">
+                  <svg class="game-timer-svg" viewBox="0 0 52 52" width="52" height="52">
+                    <circle class="game-timer-bg" cx="26" cy="26" r="22"/>
+                    <circle class="game-timer-fg" id="game-timer-fg" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="0"/>
+                  </svg>
+                  <div class="game-timer-num" id="game-timer-num">60</div>
+                </div>
+              </div>
+
+              <!-- Main: canvas + right column -->
+              <div class="game-main">
+                <!-- Canvas column -->
+                <div class="game-canvas-col">
+                  <div class="game-canvas-wrap" id="game-canvas-wrap">
+                    <canvas id="game-canvas" width="560" height="380"></canvas>
+                    <div class="game-canvas-overlay" id="game-canvas-overlay">
+                      <div class="game-overlay-icon" id="game-overlay-icon">⏳</div>
+                      <div class="game-overlay-msg" id="game-overlay-msg">Menunggu...</div>
+                      <div class="game-overlay-sub" id="game-overlay-sub"></div>
+                    </div>
+                  </div>
+                  <!-- Drawing tools (only visible for drawer) -->
+                  <div class="game-draw-tools" id="game-draw-tools" style="display:none;">
+                    <div class="game-color-btn active" style="background:#1a1a2e;" onclick="gameSetColor('#1a1a2e',this)" title="Hitam"></div>
+                    <div class="game-color-btn" style="background:#ef4444;" onclick="gameSetColor('#ef4444',this)" title="Merah"></div>
+                    <div class="game-color-btn" style="background:#f97316;" onclick="gameSetColor('#f97316',this)" title="Oranye"></div>
+                    <div class="game-color-btn" style="background:#eab308;" onclick="gameSetColor('#eab308',this)" title="Kuning"></div>
+                    <div class="game-color-btn" style="background:#22c55e;" onclick="gameSetColor('#22c55e',this)" title="Hijau"></div>
+                    <div class="game-color-btn" style="background:#3b82f6;" onclick="gameSetColor('#3b82f6',this)" title="Biru"></div>
+                    <div class="game-color-btn" style="background:#a855f7;" onclick="gameSetColor('#a855f7',this)" title="Ungu"></div>
+                    <div class="game-color-btn" style="background:#ec4899;" onclick="gameSetColor('#ec4899',this)" title="Pink"></div>
+                    <div class="game-color-btn" style="background:#ffffff;border-color:rgba(0,0,0,.3);" onclick="gameSetColor('#ffffff',this)" title="Putih"></div>
+                    <div class="game-tool-sep"></div>
+                    <button class="game-size-btn active" onclick="gameSetSize(4,this)" title="Kecil">S</button>
+                    <button class="game-size-btn" onclick="gameSetSize(10,this)" title="Sedang">M</button>
+                    <button class="game-size-btn" onclick="gameSetSize(20,this)" title="Besar">L</button>
+                    <div class="game-tool-sep"></div>
+                    <button class="game-eraser-btn" id="game-eraser-btn" onclick="gameToggleEraser()">⬜ Hapus</button>
+                    <button class="game-clear-btn" onclick="gameClearCanvas()">🗑️ Clear</button>
+                  </div>
+                </div>
+
+                <!-- Right column -->
+                <div class="game-right-col">
+                  <!-- Word box -->
+                  <div class="game-word-box">
+                    <div class="game-word-label">Kata yang digambar</div>
+                    <div id="game-word-display" class="game-word-hidden">• • • • •</div>
+                  </div>
+                  <!-- Scoreboard -->
+                  <div class="game-scoreboard">
+                    <div class="game-sb-title">🏆 Skor</div>
+                    <div id="game-sb-list"></div>
+                  </div>
+                  <!-- Guess area -->
+                  <div class="game-guess-area">
+                    <div class="game-guess-feed" id="game-guess-feed"></div>
+                    <div class="game-guess-row">
+                      <input class="game-guess-inp" id="game-guess-inp" placeholder="Ketik tebakan..." maxlength="50" onkeydown="if(event.key==='Enter')gameSubmitGuess()">
+                      <button class="game-guess-send" id="game-guess-send" onclick="gameSubmitGuess()">➤</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RESULT SCREEN -->
+            <div class="game-result" id="game-result">
+              <div class="game-overlay-icon" style="font-size:3.5rem;">🏆</div>
+              <div class="game-result-title">Game Selesai!</div>
+              <div class="game-result-podium" id="game-result-podium"></div>
+              <div class="game-result-list" id="game-result-list"></div>
+              <button class="game-play-again-btn" onclick="gameReset()">🔄 Main Lagi!</button>
+            </div>
+
           </div>
         </div>
 
@@ -1872,9 +2133,10 @@ function goPage(id,btn){
   const pg=document.getElementById('page-'+id);if(!pg)return;pg.style.display='block';pg.classList.add('active');
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  const u={home:'beranda',chat:'chat',kenangan:'kenangan',wishlist:'wishlist',mood:'mood',plan:'plan',birthday:'ultah',profile:'profil'};
+  const u={home:'beranda',chat:'chat',kenangan:'kenangan',wishlist:'wishlist',mood:'mood',plan:'plan',birthday:'ultah',profile:'profil',game:'game'};
   document.getElementById('bf-url').textContent='crazy-squad.private / '+(u[id]||id);
   if(id==='profile')buildProfile();
+  if(id==='game'){ gameBuildLobby(); }
   if(id==='admin'){if(!isAdmin()){goPage('home',document.querySelectorAll('.nb')[0]);toast('⛔ Akses ditolak!');return;}buildAdminPanel();}
 }
 
@@ -2956,6 +3218,479 @@ function adminExportData(){
 function isMuted(username){
   const muted=sg('admin_muted')||[];
   return muted.includes(username);
+}
+
+// ===================== GAME TEBAK GAMBAR =====================
+const GAME_WORDS = [
+  'Kucing','Anjing','Apel','Pohon','Rumah','Mobil','Sepeda','Pesawat','Kapal','Gunung',
+  'Matahari','Bulan','Bintang','Hujan','Pelangi','Bunga','Kupu-kupu','Gajah','Harimau','Singa',
+  'Ayam','Bebek','Ikan','Udang','Pizza','Burger','Mi Ayam','Es Krim','Kopi','Teh',
+  'Buku','Pensil','Komputer','Telepon','Kamera','Gitar','Piano','Drum','Sepatu','Kacamata',
+  'Payung','Tas','Jam Tangan','Cincin','Mahkota','Roket','Robot','Dinosaurus','Naga','Peri',
+  'Mawar','Jamur','Labu','Semangka','Pisang','Jeruk','Anggur','Stroberi','Bakso','Sate',
+  'Mobil Balap','Kereta','Bus','Helikopter','Kapal Selam','Kastil','Menara','Jembatan','Pantai','Hutan',
+  'Gunung Berapi','Bola Sepak','Raket','Panah','Pedang','Perisai','Topi','Sarung Tangan','Kaos Kaki','Dompet'
+];
+
+const GAME_TIMER_SECS = 60;
+const GAME_MIN_PLAYERS = 5;
+const GAME_CANVAS_W = 560;
+const GAME_CANVAS_H = 380;
+
+let gameState = 'lobby'; // lobby | playing | result
+let gamePlayers = [];       // players list for current session
+let gameRound = 0;          // current round index (0-based)
+let gameDrawerIdx = 0;      // index in gamePlayers array
+let gameWord = '';
+let gameScores = {};        // {username: score}
+let gameTimer = null;
+let gameTimerLeft = GAME_TIMER_SECS;
+let gameGuessedCorrect = {}; // {username: true} guessers who got it right this round
+let gameDrawOrder = [];      // shuffled player order for drawing
+
+// Canvas drawing state
+let gcCtx = null;
+let gcDrawing = false;
+let gcColor = '#1a1a2e';
+let gcSize = 4;
+let gcEraser = false;
+let gcLastX = 0, gcLastY = 0;
+
+function gameInitCanvas(){
+  const canvas = document.getElementById('game-canvas');
+  if(!canvas) return;
+  gcCtx = canvas.getContext('2d');
+  gcCtx.fillStyle = '#ffffff';
+  gcCtx.fillRect(0, 0, GAME_CANVAS_W, GAME_CANVAS_H);
+  // Resize canvas to container
+  function resizeCanvas(){
+    const wrap = document.getElementById('game-canvas-wrap');
+    if(!wrap) return;
+    const w = wrap.clientWidth;
+    if(!w) return;
+    canvas.style.width = w + 'px';
+    canvas.style.height = Math.round(w * GAME_CANVAS_H / GAME_CANVAS_W) + 'px';
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  // Draw events
+  canvas.addEventListener('mousedown', gcStart);
+  canvas.addEventListener('mousemove', gcMove);
+  canvas.addEventListener('mouseup', gcEnd);
+  canvas.addEventListener('mouseleave', gcEnd);
+  canvas.addEventListener('touchstart', gcTouchStart, {passive:false});
+  canvas.addEventListener('touchmove', gcTouchMove, {passive:false});
+  canvas.addEventListener('touchend', gcEnd);
+}
+
+function gcGetPos(e, canvas){
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = GAME_CANVAS_W / rect.width;
+  const scaleY = GAME_CANVAS_H / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+function gcStart(e){
+  if(!gameIsDrawer()) return;
+  gcDrawing = true;
+  const pos = gcGetPos(e, e.target);
+  gcLastX = pos.x; gcLastY = pos.y;
+  gcCtx.beginPath();
+  gcCtx.arc(pos.x, pos.y, (gcEraser?gcSize*3:gcSize)/2, 0, Math.PI*2);
+  gcCtx.fillStyle = gcEraser ? '#ffffff' : gcColor;
+  gcCtx.fill();
+}
+function gcMove(e){
+  if(!gcDrawing || !gameIsDrawer()) return;
+  const pos = gcGetPos(e, e.target);
+  gcCtx.beginPath();
+  gcCtx.moveTo(gcLastX, gcLastY);
+  gcCtx.lineTo(pos.x, pos.y);
+  gcCtx.strokeStyle = gcEraser ? '#ffffff' : gcColor;
+  gcCtx.lineWidth = gcEraser ? gcSize*3 : gcSize;
+  gcCtx.lineCap = 'round';
+  gcCtx.lineJoin = 'round';
+  gcCtx.stroke();
+  gcLastX = pos.x; gcLastY = pos.y;
+}
+function gcEnd(){ gcDrawing = false; }
+function gcTouchStart(e){
+  e.preventDefault();
+  if(!gameIsDrawer()) return;
+  const t = e.touches[0];
+  gcDrawing = true;
+  const pos = gcGetPos(t, e.target);
+  gcLastX = pos.x; gcLastY = pos.y;
+}
+function gcTouchMove(e){
+  e.preventDefault();
+  if(!gcDrawing || !gameIsDrawer()) return;
+  const t = e.touches[0];
+  const pos = gcGetPos(t, e.target);
+  gcCtx.beginPath();
+  gcCtx.moveTo(gcLastX, gcLastY);
+  gcCtx.lineTo(pos.x, pos.y);
+  gcCtx.strokeStyle = gcEraser ? '#ffffff' : gcColor;
+  gcCtx.lineWidth = gcEraser ? gcSize*3 : gcSize;
+  gcCtx.lineCap = 'round';
+  gcCtx.lineJoin = 'round';
+  gcCtx.stroke();
+  gcLastX = pos.x; gcLastY = pos.y;
+}
+
+function gameSetColor(c, btn){
+  gcColor = c; gcEraser = false;
+  document.querySelectorAll('.game-color-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const eb = document.getElementById('game-eraser-btn');
+  if(eb) eb.classList.remove('active');
+}
+function gameSetSize(s, btn){
+  gcSize = s;
+  document.querySelectorAll('.game-size-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+function gameToggleEraser(){
+  gcEraser = !gcEraser;
+  const btn = document.getElementById('game-eraser-btn');
+  if(btn) btn.classList.toggle('active', gcEraser);
+}
+function gameClearCanvas(){
+  if(!gcCtx) return;
+  gcCtx.fillStyle = '#ffffff';
+  gcCtx.fillRect(0, 0, GAME_CANVAS_W, GAME_CANVAS_H);
+}
+function gameIsDrawer(){
+  if(!CU || gameState !== 'playing') return false;
+  const drawer = gameDrawOrder[gameRound % gameDrawOrder.length];
+  return drawer && drawer.username === CU.username;
+}
+
+function gameBuildLobby(){
+  // Get real members, exclude hidden admin
+  const realMembers = members.filter(m => m.username !== HIDDEN_ADMIN_USERNAME);
+  gamePlayers = realMembers;
+  const grid = document.getElementById('game-players-grid');
+  const countEl = document.getElementById('game-player-count');
+  const warnEl = document.getElementById('game-min-warn');
+  const curCountEl = document.getElementById('game-cur-count');
+  const startBtn = document.getElementById('game-start-btn');
+  if(!grid) return;
+
+  const count = gamePlayers.length;
+  if(countEl) countEl.textContent = count + ' pemain';
+  if(curCountEl) curCountEl.textContent = count;
+
+  grid.innerHTML = gamePlayers.map(p => {
+    const av = p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : p.avatar;
+    return `<div class="game-player-chip" style="border-color:rgba(255,255,255,.18);">
+      <div class="game-player-av" style="${p.color?'background:'+p.color:''}">${av}</div>
+      <div class="game-player-name">${p.name.split(' ')[0]}</div>
+    </div>`;
+  }).join('');
+
+  const canStart = count >= GAME_MIN_PLAYERS;
+  if(warnEl) warnEl.style.display = canStart ? 'none' : 'block';
+  if(startBtn) startBtn.disabled = !canStart;
+}
+
+function gameStart(){
+  if(gamePlayers.length < GAME_MIN_PLAYERS){
+    toast('⚠️ Butuh minimal '+GAME_MIN_PLAYERS+' pemain!'); return;
+  }
+  // Shuffle draw order
+  gameDrawOrder = [...gamePlayers].sort(()=>Math.random()-.5);
+  gameRound = 0;
+  gameScores = {};
+  gamePlayers.forEach(p => { gameScores[p.username] = 0; });
+  gameState = 'playing';
+
+  // Show arena, hide lobby
+  document.getElementById('game-lobby').style.display = 'none';
+  document.getElementById('game-arena').classList.add('show');
+  document.getElementById('game-result').classList.remove('show');
+
+  gameInitCanvas();
+  gameStartRound();
+}
+
+function gameStartRound(){
+  if(gameRound >= gameDrawOrder.length){
+    gameShowResult(); return;
+  }
+  gameGuessedCorrect = {};
+  const drawer = gameDrawOrder[gameRound];
+  gameWord = GAME_WORDS[Math.floor(Math.random() * GAME_WORDS.length)];
+
+  // Update UI
+  const roundBadge = document.getElementById('game-round-badge');
+  if(roundBadge) roundBadge.textContent = 'Ronde '+(gameRound+1)+' / '+gameDrawOrder.length;
+
+  const dAv = document.getElementById('game-drawer-av');
+  const dName = document.getElementById('game-drawer-name');
+  if(dAv) dAv.textContent = drawer.avatar || '✨';
+  if(dAv && drawer.color) dAv.style.background = drawer.color;
+  if(dName) dName.textContent = drawer.name.split(' ')[0];
+
+  // Clear canvas
+  gameClearCanvas();
+
+  // Show/hide drawing tools
+  const tools = document.getElementById('game-draw-tools');
+  const isMe = CU && drawer.username === CU.username;
+  if(tools) tools.style.display = isMe ? 'flex' : 'none';
+
+  // Word display
+  const wordEl = document.getElementById('game-word-display');
+  if(wordEl){
+    if(isMe){
+      wordEl.className = 'game-word-secret';
+      wordEl.textContent = gameWord;
+    } else {
+      wordEl.className = 'game-word-hidden';
+      wordEl.textContent = '•'.repeat(gameWord.length);
+    }
+  }
+
+  // Overlay message
+  const overlay = document.getElementById('game-canvas-overlay');
+  const overlayIcon = document.getElementById('game-overlay-icon');
+  const overlayMsg = document.getElementById('game-overlay-msg');
+  const overlaySub = document.getElementById('game-overlay-sub');
+  if(overlay && overlayMsg){
+    if(isMe){
+      overlayIcon.textContent = '✏️';
+      overlayMsg.textContent = 'Kata kamu: ' + gameWord;
+      overlaySub.textContent = 'Gambar kata di atas! Jangan tulis huruf/angka ya!';
+    } else {
+      overlayIcon.textContent = '👀';
+      overlayMsg.textContent = drawer.name.split(' ')[0] + ' sedang menggambar...';
+      overlaySub.textContent = 'Tebak kata di kolom bawah!';
+    }
+    overlay.classList.add('show');
+    setTimeout(()=>{ overlay.classList.remove('show'); }, isMe ? 2500 : 1800);
+  }
+
+  // Guess input
+  const guessInp = document.getElementById('game-guess-inp');
+  const guessSend = document.getElementById('game-guess-send');
+  if(guessInp){ guessInp.disabled = isMe; guessInp.value = ''; guessInp.placeholder = isMe ? 'Kamu yang menggambar! 🎨' : 'Ketik tebakan...'; }
+  if(guessSend) guessSend.disabled = isMe;
+
+  // Clear guess feed
+  const feed = document.getElementById('game-guess-feed');
+  if(feed) feed.innerHTML = '';
+  gameAddSystemMsg(drawer.name.split(' ')[0] + ' mulai menggambar! Tebak apa yang digambar ya! 🎨');
+
+  // Build scoreboard
+  gameRenderScoreboard();
+
+  // Start timer
+  gameTimerLeft = GAME_TIMER_SECS;
+  gameUpdateTimer();
+  clearInterval(gameTimer);
+  gameTimer = setInterval(()=>{
+    gameTimerLeft--;
+    gameUpdateTimer();
+    if(gameTimerLeft <= 0){
+      clearInterval(gameTimer);
+      gameRoundEnd(false);
+    }
+  }, 1000);
+}
+
+function gameUpdateTimer(){
+  const num = document.getElementById('game-timer-num');
+  const fg = document.getElementById('game-timer-fg');
+  if(num) num.textContent = gameTimerLeft;
+  if(fg){
+    const circumference = 2 * Math.PI * 22;
+    const offset = circumference * (1 - gameTimerLeft / GAME_TIMER_SECS);
+    fg.style.strokeDashoffset = offset;
+    fg.style.stroke = gameTimerLeft <= 10 ? '#fb7185' : 'url(#timerGrad)';
+  }
+}
+
+function gameRoundEnd(allGuessed){
+  clearInterval(gameTimer);
+  const drawer = gameDrawOrder[gameRound];
+  const wordEl = document.getElementById('game-word-display');
+  if(wordEl){ wordEl.className = 'game-word-secret'; wordEl.textContent = gameWord; }
+
+  // Show canvas overlay with answer
+  const overlay = document.getElementById('game-canvas-overlay');
+  const overlayIcon = document.getElementById('game-overlay-icon');
+  const overlayMsg = document.getElementById('game-overlay-msg');
+  const overlaySub = document.getElementById('game-overlay-sub');
+  if(overlay){
+    overlayIcon.textContent = allGuessed ? '🎉' : '⏰';
+    overlayMsg.textContent = allGuessed ? 'Semua berhasil menebak!' : 'Waktu habis!';
+    overlaySub.textContent = 'Kata yang benar: ' + gameWord;
+    overlay.classList.add('show');
+  }
+
+  // Disable guessing
+  const guessInp = document.getElementById('game-guess-inp');
+  const guessSend = document.getElementById('game-guess-send');
+  if(guessInp) guessInp.disabled = true;
+  if(guessSend) guessSend.disabled = true;
+
+  gameAddSystemMsg('Ronde selesai! Kata yang benar: 🔑 ' + gameWord);
+  gameRenderScoreboard();
+
+  setTimeout(()=>{
+    if(overlay) overlay.classList.remove('show');
+    gameRound++;
+    gameStartRound();
+  }, 3200);
+}
+
+function gameSubmitGuess(){
+  if(!CU || gameState !== 'playing') return;
+  if(gameIsDrawer()) return;
+  const inp = document.getElementById('game-guess-inp');
+  if(!inp) return;
+  const guess = inp.value.trim();
+  if(!guess) return;
+  inp.value = '';
+
+  // Check if already guessed correctly
+  if(gameGuessedCorrect[CU.username]) return;
+
+  // Add to feed
+  const isCorrect = guess.toLowerCase() === gameWord.toLowerCase();
+  gameAddGuess(CU.name.split(' ')[0], guess, isCorrect);
+
+  if(isCorrect){
+    gameGuessedCorrect[CU.username] = true;
+    // Points based on time remaining & order
+    const guessedCount = Object.keys(gameGuessedCorrect).length;
+    const timeBonus = Math.round(gameTimerLeft / GAME_TIMER_SECS * 50);
+    const orderBonus = Math.max(0, 30 - (guessedCount - 1) * 10);
+    const pts = 20 + timeBonus + orderBonus;
+    gameScores[CU.username] = (gameScores[CU.username] || 0) + pts;
+
+    // Bonus for drawer
+    const drawer = gameDrawOrder[gameRound];
+    gameScores[drawer.username] = (gameScores[drawer.username] || 0) + 10;
+
+    gameAddSystemMsg('✅ ' + CU.name.split(' ')[0] + ' menebak benar! +' + pts + ' poin!');
+    gameRenderScoreboard();
+
+    // Flash guess area
+    const guessArea = document.querySelector('.game-guess-area');
+    if(guessArea){ guessArea.classList.add('game-correct-flash'); setTimeout(()=>guessArea.classList.remove('game-correct-flash'),500); }
+
+    // Check if everyone guessed
+    const guessers = gamePlayers.filter(p => p.username !== drawer.username);
+    if(guessers.every(p => gameGuessedCorrect[p.username])){
+      gameRoundEnd(true);
+    }
+  }
+}
+
+function gameAddGuess(name, text, isCorrect){
+  const feed = document.getElementById('game-guess-feed');
+  if(!feed) return;
+  const div = document.createElement('div');
+  div.className = 'game-guess-item' + (isCorrect ? ' correct' : '');
+  div.innerHTML = `<span class="game-guess-name">${name}:</span><span class="game-guess-txt">${isCorrect ? '✅ ' + text : text}</span>`;
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function gameAddSystemMsg(txt){
+  const feed = document.getElementById('game-guess-feed');
+  if(!feed) return;
+  const div = document.createElement('div');
+  div.className = 'game-guess-item system';
+  div.innerHTML = `<span class="game-guess-txt">${txt}</span>`;
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function gameRenderScoreboard(){
+  const list = document.getElementById('game-sb-list');
+  if(!list) return;
+  const sorted = gamePlayers
+    .map(p => ({...p, pts: gameScores[p.username] || 0}))
+    .sort((a,b) => b.pts - a.pts);
+
+  list.innerHTML = sorted.map((p, i) => {
+    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const av = p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : p.avatar;
+    return `<div class="game-sb-item">
+      <div class="game-sb-rank ${rankClass}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div class="game-sb-av" style="${p.color?'background:'+p.color:''}">${av}</div>
+      <div class="game-sb-name">${p.name.split(' ')[0]}</div>
+      <div class="game-sb-pts">${p.pts}</div>
+    </div>`;
+  }).join('');
+}
+
+function gameShowResult(){
+  clearInterval(gameTimer);
+  gameState = 'result';
+  document.getElementById('game-arena').classList.remove('show');
+  const result = document.getElementById('game-result');
+  result.classList.add('show');
+
+  const sorted = gamePlayers
+    .map(p => ({...p, pts: gameScores[p.username] || 0}))
+    .sort((a,b) => b.pts - a.pts);
+
+  // Podium
+  const podium = document.getElementById('game-result-podium');
+  if(podium){
+    const order = [sorted[1], sorted[0], sorted[2]].filter(Boolean);
+    const barClasses = ['p2','p1','p3'];
+    const labels = ['2','1','3'];
+    podium.innerHTML = order.map((p, i) => {
+      const av = p && p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (p ? p.avatar : '');
+      return p ? `<div class="game-podium-item">
+        <div class="game-podium-av" style="${p.color?'background:'+p.color:''}">${av}</div>
+        <div class="game-podium-name">${p.name.split(' ')[0]}</div>
+        <div class="game-podium-pts">${p.pts} pts</div>
+        <div class="game-podium-bar ${barClasses[i]}">${labels[i]}</div>
+      </div>` : '';
+    }).join('');
+  }
+
+  // Full list
+  const resList = document.getElementById('game-result-list');
+  if(resList){
+    resList.innerHTML = sorted.map((p, i) => {
+      const av = p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : p.avatar;
+      return `<div class="game-res-item">
+        <div class="game-res-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+        <div class="game-res-av" style="${p.color?'background:'+p.color:''}">${av}</div>
+        <div class="game-res-name">${p.name}</div>
+        <div class="game-res-pts">${p.pts} pts</div>
+      </div>`;
+    }).join('');
+  }
+
+  launchConfetti();
+  toast('🏆 Game selesai! '+sorted[0].name.split(' ')[0]+' menang! 🎉', 4000);
+}
+
+function gameReset(){
+  clearInterval(gameTimer);
+  gameState = 'lobby';
+  gameRound = 0;
+  gameScores = {};
+  gameGuessedCorrect = {};
+  gameDrawOrder = [];
+  gameClearCanvas();
+
+  document.getElementById('game-arena').classList.remove('show');
+  document.getElementById('game-result').classList.remove('show');
+  document.getElementById('game-lobby').style.display = '';
+  document.getElementById('game-draw-tools').style.display = 'none';
+
+  gameBuildLobby();
 }
 
 // ===================== TOAST =====================
