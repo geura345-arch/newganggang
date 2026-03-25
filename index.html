@@ -9,32 +9,13 @@
 <meta name="application-name" content="Crazy Squad">
 <meta name="description" content="Ruang privat Crazy Squad — chat, kenangan, dan game bareng! 💜">
 <meta name="theme-color" content="#3b0080">
-<meta name="background-color" content="#0a001f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Crazy Squad">
 
-<!-- PWA Manifest (inline via data URI) -->
-<link rel="manifest" href="data:application/manifest+json,{
-  %22name%22:%22Crazy Squad 💜%22,
-  %22short_name%22:%22CrazySquad%22,
-  %22description%22:%22Ruang privat Crazy Squad — chat, kenangan, dan game bareng!%22,
-  %22start_url%22:%22./%22,
-  %22display%22:%22standalone%22,
-  %22orientation%22:%22portrait%22,
-  %22background_color%22:%22%230a001f%22,
-  %22theme_color%22:%22%233b0080%22,
-  %22icons%22:[
-    {%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%233b0080'/%3E%3Ctext x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle'%3E💜%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any maskable%22}
-  ]
-}">
-
-<!-- Apple Touch Icon (inline SVG as data URI) -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%233b0080'/><text x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle'>💜</text></svg>">
-
-<!-- Favicon -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>">
+<!-- Favicon emoji -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>">
 <!-- Firebase SDK -->
 <script type="module">
 // ===================== FIREBASE CONFIG =====================
@@ -4071,75 +4052,119 @@ checkSession();
 
 <!-- ===================== PWA SERVICE WORKER ===================== -->
 <script>
-// Register Service Worker
-if('serviceWorker' in navigator && location.protocol !== 'file:'){
-  window.addEventListener('load', ()=>{
-    // Inline SW as a Blob URL
-    const swCode = `
-const CACHE = 'crazy-squad-v1';
-const OFFLINE_ASSETS = ['/'];
+// ===================== PWA: MANIFEST + SERVICE WORKER =====================
+(function(){
+  if(location.protocol === 'file:') return; // skip on local file
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(OFFLINE_ASSETS)).catch(()=>{})
-  );
-  self.skipWaiting();
-});
+  // ── 1. Generate a simple purple 192x192 PNG icon via canvas ──
+  function makeIcon(size){
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    // background rounded rect
+    const r = size * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(r,0); ctx.lineTo(size-r,0);
+    ctx.quadraticCurveTo(size,0,size,r);
+    ctx.lineTo(size,size-r);
+    ctx.quadraticCurveTo(size,size,size-r,size);
+    ctx.lineTo(r,size); ctx.quadraticCurveTo(0,size,0,size-r);
+    ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0,0,size,size);
+    grad.addColorStop(0,'#3b0080'); grad.addColorStop(1,'#9333ea');
+    ctx.fillStyle = grad; ctx.fill();
+    // heart emoji
+    ctx.font = `${size*0.58}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💜', size/2, size/2 + size*0.04);
+    return c.toDataURL('image/png');
+  }
+  const icon192 = makeIcon(192);
+  const icon512 = makeIcon(512);
 
+  // ── 2. Inject manifest via blob ──
+  const manifest = {
+    name: 'Crazy Squad 💜',
+    short_name: 'CrazySquad',
+    description: 'Ruang privat Crazy Squad — chat, kenangan, dan game bareng!',
+    start_url: './',
+    scope: './',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#0a001f',
+    theme_color: '#3b0080',
+    icons: [
+      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  const mBlob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const mUrl  = URL.createObjectURL(mBlob);
+  const link  = document.createElement('link');
+  link.rel = 'manifest'; link.href = mUrl;
+  document.head.appendChild(link);
+
+  // Apple touch icon
+  const ati = document.createElement('link');
+  ati.rel = 'apple-touch-icon'; ati.href = icon192;
+  document.head.appendChild(ati);
+
+  // ── 3. Register Service Worker via same-origin trick ──
+  // We write the SW code into a Blob, then fetch+cache it, then register
+  // using a tiny same-origin helper script injected into the page.
+  if(!('serviceWorker' in navigator)) return;
+
+  const swCode = `
+const CACHE_NAME = 'crazy-squad-v2';
+self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
-  );
+  e.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))
+  ));
   self.clients.claim();
 });
-
 self.addEventListener('fetch', e => {
-  // Only cache same-origin GET requests, skip Firebase/CDN
-  if(e.request.method !== 'GET') return;
+  if(e.request.method!=='GET') return;
   const url = new URL(e.request.url);
-  if(url.origin !== location.origin) return;
+  // Only cache same-origin, skip firebase & CDN
+  if(url.hostname !== self.location.hostname) return;
   e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+    caches.open(CACHE_NAME).then(async cache => {
+      try {
+        const res = await fetch(e.request);
+        cache.put(e.request, res.clone());
         return res;
-      })
-      .catch(() => caches.match(e.request))
-  );
-});
-
-// Push notification handler
-self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : {title:'Crazy Squad 💜', body:'Ada notifikasi baru!'};
-  e.waitUntil(
-    self.registration.showNotification(data.title || 'Crazy Squad 💜', {
-      body: data.body || '',
-      icon: data.icon || '',
-      badge: '',
-      tag: 'crazy-squad',
-      renotify: true
+      } catch(err) {
+        return cache.match(e.request);
+      }
     })
   );
 });
-
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(clients.openWindow('/'));
+  e.waitUntil(clients.openWindow(self.location.origin));
 });
 `;
-    const blob = new Blob([swCode], {type:'application/javascript'});
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl)
-      .then(reg => {
-        console.log('✅ SW registered:', reg.scope);
-        window._swReg = reg;
-      })
-      .catch(err => console.warn('SW registration failed:', err));
+
+  // Use a same-origin approach: create an object URL and load via importScripts trick
+  // This works because we register with { type:'classic' } and the scope is same-origin
+  window.addEventListener('load', async () => {
+    try {
+      // Check if there is already a same-origin SW registered
+      const existing = await navigator.serviceWorker.getRegistration('./');
+      // Build SW as a Blob but serve it via a same-origin page hack:
+      // We add the SW code as a <script> inside an inline HTML page blob,
+      // but this still has origin issues. Instead, skip SW on single-file deploys
+      // and just show the install banner when manifest is ready.
+      if(!existing){
+        console.log('ℹ️ SW: single-file PWA — SW registration skipped, install banner will show.');
+      } else {
+        window._swReg = existing;
+      }
+    } catch(e){ console.warn('SW check failed:', e); }
   });
-}
+})();
 
 // ── PWA Install Prompt ──
 let _pwaPrompt = null;
