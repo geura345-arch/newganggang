@@ -156,6 +156,7 @@ body{font-family:'Nunito','Segoe UI','Arial Rounded MT Bold',Arial,sans-serif;}
 .game-rule-item{display:flex;align-items:flex-start;gap:9px;font-size:.8rem;font-weight:600;color:var(--text2);margin-bottom:7px;line-height:1.5;}
 .game-rule-item:last-child{margin-bottom:0;}
 .game-rule-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#ec4899);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:900;flex-shrink:0;margin-top:1px;}
+#game-online-section{border-color:rgba(74,222,128,.22);background:rgba(74,222,128,.04);}
 .game-players-section{background:rgba(255,255,255,.072);backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:16px 20px;box-shadow:var(--inset),0 4px 18px rgba(0,0,0,.14);}
 .game-players-title{font-size:.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
 .game-players-grid{display:flex;flex-wrap:wrap;gap:8px;}
@@ -1389,14 +1390,24 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
 
               <div class="game-players-section">
                 <div class="game-players-title">
-                  <span>👥 Pemain Aktif</span>
-                  <span id="game-player-count" style="color:var(--text2);font-size:.72rem;font-weight:700;letter-spacing:0;">0 pemain</span>
+                  <span>👥 Semua Member</span>
+                  <span id="game-player-count" style="color:var(--text2);font-size:.72rem;font-weight:700;letter-spacing:0;">0 terdaftar</span>
                 </div>
                 <div class="game-players-grid" id="game-players-grid"></div>
               </div>
 
+              <div class="game-players-section" id="game-online-section">
+                <div class="game-players-title">
+                  <span>🟢 Sedang Online</span>
+                  <span id="game-online-count" style="color:#4ade80;font-size:.72rem;font-weight:700;letter-spacing:0;">0 online</span>
+                </div>
+                <div class="game-players-grid" id="game-online-grid">
+                  <div style="font-size:.75rem;color:var(--text3);font-weight:600;font-style:italic;padding:4px 2px;">Belum ada yang online...</div>
+                </div>
+              </div>
+
               <div id="game-min-warn" class="game-min-warn" style="display:none;">
-                ⚠️ Butuh minimal <strong>2 pemain</strong> untuk mulai. Sekarang ada <span id="game-cur-count">0</span> pemain.
+                ⚠️ Butuh minimal <strong>2 pemain online</strong> untuk mulai. Sekarang <span id="game-cur-count">0</span> pemain online.
               </div>
 
               <button class="game-start-btn" id="game-start-btn" onclick="gameStart()" disabled>
@@ -3646,36 +3657,71 @@ function gameApplyRoundUI(){
 function gameBuildLobby(){
   const realMembers = members.filter(m => m.username !== HIDDEN_ADMIN_USERNAME);
   gamePlayers = realMembers;
-  const grid = document.getElementById('game-players-grid');
-  const countEl = document.getElementById('game-player-count');
-  const warnEl = document.getElementById('game-min-warn');
-  const curCountEl = document.getElementById('game-cur-count');
-  const startBtn = document.getElementById('game-start-btn');
+
+  const grid        = document.getElementById('game-players-grid');
+  const onlineGrid  = document.getElementById('game-online-grid');
+  const countEl     = document.getElementById('game-player-count');
+  const onlineCount = document.getElementById('game-online-count');
+  const warnEl      = document.getElementById('game-min-warn');
+  const curCountEl  = document.getElementById('game-cur-count');
+  const startBtn    = document.getElementById('game-start-btn');
   if(!grid) return;
 
-  const count = gamePlayers.length;
-  if(countEl) countEl.textContent = count + ' member terdaftar';
-  if(curCountEl) curCountEl.textContent = count;
+  const onlineMembers = gamePlayers.filter(p => isOnline(p.username));
+  const totalCount    = gamePlayers.length;
+  const onlineCt      = onlineMembers.length;
 
+  if(countEl)     countEl.textContent  = totalCount + ' terdaftar';
+  if(onlineCount) onlineCount.textContent = onlineCt + ' online';
+  if(curCountEl)  curCountEl.textContent  = onlineCt;
+
+  // ── All members card (show dot but no extra styling) ──
   grid.innerHTML = gamePlayers.map(p => {
     const online = isOnline(p.username);
-    const isMe = p.username === CU?.username;
-    const av = p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (p.avatar||'✨');
-    return `<div class="game-player-chip ${isMe?'selected':''}">
+    const isMe   = p.username === CU?.username;
+    const av     = p.photo
+      ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+      : (p.avatar || '✨');
+    return `<div class="game-player-chip${isMe?' selected':''}">
       <div class="game-player-av" style="${p.color?'background:'+p.color:''}">${av}</div>
       <div class="game-player-name">${p.name.split(' ')[0]}</div>
-      <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;${online?'background:#4ade80;box-shadow:0 0 5px #4ade80':'background:rgba(255,255,255,.2)'}"></div>
+      <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;${online
+        ? 'background:#4ade80;box-shadow:0 0 5px #4ade80'
+        : 'background:rgba(255,255,255,.18)'}"></div>
     </div>`;
   }).join('');
 
-  const canStart = count >= GAME_MIN_PLAYERS;
-  if(warnEl) warnEl.style.display = canStart ? 'none' : 'block';
-  if(startBtn) startBtn.disabled = !canStart;
+  // ── Online-only card ──
+  if(onlineGrid){
+    if(onlineCt === 0){
+      onlineGrid.innerHTML = '<div style="font-size:.75rem;color:var(--text3);font-weight:600;font-style:italic;padding:4px 2px;">Belum ada yang online...</div>';
+    } else {
+      onlineGrid.innerHTML = onlineMembers.map(p => {
+        const isMe = p.username === CU?.username;
+        const av   = p.photo
+          ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+          : (p.avatar || '✨');
+        return `<div class="game-player-chip drawer" style="border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08);">
+          <div class="game-player-av" style="${p.color?'background:'+p.color:''}">${av}</div>
+          <div class="game-player-name">${p.name.split(' ')[0]}${isMe?' (Kamu)':''}</div>
+          <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:#4ade80;box-shadow:0 0 6px #4ade80;"></div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Start requires ≥2 online players
+  const canStart = onlineCt >= GAME_MIN_PLAYERS;
+  if(warnEl)   warnEl.style.display = canStart ? 'none' : 'block';
+  if(startBtn) startBtn.disabled    = !canStart;
 }
 
 // ── Start game (host) ──
 async function gameStart(){
-  if(gamePlayers.length < GAME_MIN_PLAYERS){ toast('⚠️ Butuh minimal '+GAME_MIN_PLAYERS+' pemain!'); return; }
+  const onlineMembers = gamePlayers.filter(p => isOnline(p.username));
+  if(onlineMembers.length < GAME_MIN_PLAYERS){ toast('⚠️ Butuh minimal '+GAME_MIN_PLAYERS+' pemain online!'); return; }
+  // Use online players for the game session
+  gamePlayers = onlineMembers;
 
   // Ask notification permission for this device
   await gameRequestNotification();
