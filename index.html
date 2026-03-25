@@ -1396,7 +1396,7 @@ select.modal-inp{appearance:auto;-webkit-appearance:auto;}
               </div>
 
               <div id="game-min-warn" class="game-min-warn" style="display:none;">
-                ⚠️ Butuh minimal <strong>5 pemain</strong> untuk mulai. Sekarang ada <span id="game-cur-count">0</span> pemain.
+                ⚠️ Butuh minimal <strong>2 pemain</strong> untuk mulai. Sekarang ada <span id="game-cur-count">0</span> pemain.
               </div>
 
               <button class="game-start-btn" id="game-start-btn" onclick="gameStart()" disabled>
@@ -2063,6 +2063,19 @@ function setupRealtimeListeners(){
 
   // ── AUTO CLEAN — hapus chat >5 bulan, jalankan sekali saat login ──
   setTimeout(autoCleanOldMessages, 3000);
+
+  // ── GAME NOTIFICATIONS — pasang listener global supaya notif masuk walau tidak di halaman game ──
+  if('Notification' in window){
+    // Ask permission after 3 seconds of being logged in
+    setTimeout(async ()=>{
+      if(Notification.permission === 'default'){
+        const ok = await gameRequestNotification();
+        if(ok){ gameSetupNotifListener(); }
+      } else if(Notification.permission === 'granted'){
+        gameSetupNotifListener();
+      }
+    }, 3000);
+  }
 }
 
 function checkSession(){
@@ -2136,7 +2149,7 @@ function goPage(id,btn){
   const u={home:'beranda',chat:'chat',kenangan:'kenangan',wishlist:'wishlist',mood:'mood',plan:'plan',birthday:'ultah',profile:'profil',game:'game'};
   document.getElementById('bf-url').textContent='crazy-squad.private / '+(u[id]||id);
   if(id==='profile')buildProfile();
-  if(id==='game'){ gameBuildLobby(); }
+  if(id==='game'){ gameOnPageEnter(); }
   if(id==='admin'){if(!isAdmin()){goPage('home',document.querySelectorAll('.nb')[0]);toast('⛔ Akses ditolak!');return;}buildAdminPanel();}
 }
 
@@ -3233,20 +3246,24 @@ const GAME_WORDS = [
 ];
 
 const GAME_TIMER_SECS = 60;
-const GAME_MIN_PLAYERS = 5;
+const GAME_MIN_PLAYERS = 2;
 const GAME_CANVAS_W = 560;
 const GAME_CANVAS_H = 380;
 
 let gameState = 'lobby'; // lobby | playing | result
-let gamePlayers = [];       // players list for current session
-let gameRound = 0;          // current round index (0-based)
-let gameDrawerIdx = 0;      // index in gamePlayers array
+let gamePlayers = [];
+let gameRound = 0;
 let gameWord = '';
-let gameScores = {};        // {username: score}
+let gameScores = {};
 let gameTimer = null;
 let gameTimerLeft = GAME_TIMER_SECS;
-let gameGuessedCorrect = {}; // {username: true} guessers who got it right this round
-let gameDrawOrder = [];      // shuffled player order for drawing
+let gameGuessedCorrect = {};
+let gameDrawOrder = [];
+let gameIsHost = false; // only host (first to start) drives round transitions
+let gameCanvasThrottle = null;
+let gameLastStrokeTs = 0;
+let gameJoinedPlayers = {}; // {username: true} — who pressed "Ikut Main"
+let gameFbListeners = []; // cleanup refs
 
 // Canvas drawing state
 let gcCtx = null;
@@ -3256,24 +3273,93 @@ let gcSize = 4;
 let gcEraser = false;
 let gcLastX = 0, gcLastY = 0;
 
+// ── Firebase paths for game ──
+const FB_GAME = 'squad/game';
+
+async function gameFbSet(path, val){ if(window._fbReady) await fbSet(FB_GAME+'/'+path, val); }
+async function gameFbUpdate(path, val){ if(window._fbReady) await fbUpdate(FB_GAME+'/'+path, val); }
+async function gameFbGet(path){ if(!window._fbReady) return null; return await fbGet(FB_GAME+'/'+path); }
+function gameFbListen(path, cb){
+  if(!window._fbReady) return;
+  const {db,ref,onValue} = window._fb;
+  const r = ref(db, FB_GAME+'/'+path);
+  const unsub = onValue(r, snap => cb(snap.val()));
+  gameFbListeners.push(unsub);
+}
+function gameCleanupListeners(){
+  gameFbListeners.forEach(u => { try{ u(); }catch(e){} });
+  gameFbListeners = [];
+}
+
+// ── Push notification helpers ──
+let gamePushSubscription = null;
+
+async function gameRequestNotification(){
+  if(!('Notification' in window)){ toast('⚠️ Browser tidak mendukung notifikasi'); return false; }
+  if(Notification.permission === 'granted') return true;
+  if(Notification.permission === 'denied'){ toast('🔕 Notifikasi diblokir. Ubah di pengaturan browser.'); return false; }
+  const result = await Notification.requestPermission();
+  if(result === 'granted'){ toast('🔔 Notifikasi aktif!'); return true; }
+  toast('🔕 Izin notifikasi ditolak'); return false;
+}
+
+function gameSendNotification(title, body, icon='🎨'){
+  if(Notification.permission !== 'granted') return;
+  try{
+    new Notification(title, {
+      body,
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">'+icon+'</text></svg>',
+      tag: 'crazy-squad-game',
+      renotify: true
+    });
+  }catch(e){}
+}
+
+// ── Notify all other players via Firebase ──
+async function gameBroadcastNotif(title, body){
+  if(!window._fbReady) return;
+  await fbSet(FB_GAME+'/notification', {
+    title, body, ts: Date.now(), from: CU ? CU.username : ''
+  });
+}
+
+// ── Listen for incoming game notifications ──
+function gameSetupNotifListener(){
+  if(!window._fbReady) return;
+  const {db,ref,onValue} = window._fb;
+  let lastTs = Date.now();
+  const r = ref(db, FB_GAME+'/notification');
+  const unsub = onValue(r, snap => {
+    const data = snap.val();
+    if(!data) return;
+    // Only show if not sent by self and newer than when we started listening
+    if(data.from !== (CU ? CU.username : '') && data.ts > lastTs){
+      lastTs = data.ts;
+      gameSendNotification(data.title, data.body);
+    }
+  });
+  gameFbListeners.push(unsub);
+}
+
+// ── Canvas init ──
+let gcInitialized = false;
 function gameInitCanvas(){
   const canvas = document.getElementById('game-canvas');
-  if(!canvas) return;
+  if(!canvas || gcInitialized) return;
+  gcInitialized = true;
   gcCtx = canvas.getContext('2d');
   gcCtx.fillStyle = '#ffffff';
   gcCtx.fillRect(0, 0, GAME_CANVAS_W, GAME_CANVAS_H);
-  // Resize canvas to container
   function resizeCanvas(){
     const wrap = document.getElementById('game-canvas-wrap');
     if(!wrap) return;
     const w = wrap.clientWidth;
-    if(!w) return;
+    if(!w || w < 10) return;
     canvas.style.width = w + 'px';
     canvas.style.height = Math.round(w * GAME_CANVAS_H / GAME_CANVAS_W) + 'px';
   }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
-  // Draw events
   canvas.addEventListener('mousedown', gcStart);
   canvas.addEventListener('mousemove', gcMove);
   canvas.addEventListener('mouseup', gcEnd);
@@ -3292,51 +3378,79 @@ function gcGetPos(e, canvas){
     y: (e.clientY - rect.top) * scaleY
   };
 }
+
+// ── Send a stroke event to Firebase ──
+function gcSendStroke(type, x, y, x2, y2){
+  if(!window._fbReady || !CU) return;
+  const drawer = gameDrawOrder[gameRound % Math.max(1, gameDrawOrder.length)];
+  if(!drawer || drawer.username !== CU.username) return;
+  const now = Date.now();
+  if(now - gameLastStrokeTs < 16) return; // ~60fps throttle
+  gameLastStrokeTs = now;
+  fbSet(FB_GAME+'/stroke', {
+    type, x, y, x2: x2||0, y2: y2||0,
+    color: gcEraser ? '#ffffff' : gcColor,
+    size: gcEraser ? gcSize*3 : gcSize,
+    ts: now,
+    round: gameRound
+  });
+}
+
+function gcApplyStroke(d){
+  if(!gcCtx) return;
+  if(d.type === 'dot'){
+    gcCtx.beginPath();
+    gcCtx.arc(d.x, d.y, d.size/2, 0, Math.PI*2);
+    gcCtx.fillStyle = d.color;
+    gcCtx.fill();
+  } else if(d.type === 'line'){
+    gcCtx.beginPath();
+    gcCtx.moveTo(d.x, d.y);
+    gcCtx.lineTo(d.x2, d.y2);
+    gcCtx.strokeStyle = d.color;
+    gcCtx.lineWidth = d.size;
+    gcCtx.lineCap = 'round';
+    gcCtx.lineJoin = 'round';
+    gcCtx.stroke();
+  } else if(d.type === 'clear'){
+    gcCtx.fillStyle = '#ffffff';
+    gcCtx.fillRect(0, 0, GAME_CANVAS_W, GAME_CANVAS_H);
+  }
+}
+
 function gcStart(e){
   if(!gameIsDrawer()) return;
   gcDrawing = true;
   const pos = gcGetPos(e, e.target);
   gcLastX = pos.x; gcLastY = pos.y;
-  gcCtx.beginPath();
-  gcCtx.arc(pos.x, pos.y, (gcEraser?gcSize*3:gcSize)/2, 0, Math.PI*2);
-  gcCtx.fillStyle = gcEraser ? '#ffffff' : gcColor;
-  gcCtx.fill();
+  gcApplyStroke({type:'dot',x:pos.x,y:pos.y,size:gcEraser?gcSize*3:gcSize,color:gcEraser?'#ffffff':gcColor});
+  gcSendStroke('dot', pos.x, pos.y);
 }
 function gcMove(e){
   if(!gcDrawing || !gameIsDrawer()) return;
   const pos = gcGetPos(e, e.target);
-  gcCtx.beginPath();
-  gcCtx.moveTo(gcLastX, gcLastY);
-  gcCtx.lineTo(pos.x, pos.y);
-  gcCtx.strokeStyle = gcEraser ? '#ffffff' : gcColor;
-  gcCtx.lineWidth = gcEraser ? gcSize*3 : gcSize;
-  gcCtx.lineCap = 'round';
-  gcCtx.lineJoin = 'round';
-  gcCtx.stroke();
+  gcApplyStroke({type:'line',x:gcLastX,y:gcLastY,x2:pos.x,y2:pos.y,size:gcEraser?gcSize*3:gcSize,color:gcEraser?'#ffffff':gcColor});
+  gcSendStroke('line', gcLastX, gcLastY, pos.x, pos.y);
   gcLastX = pos.x; gcLastY = pos.y;
 }
 function gcEnd(){ gcDrawing = false; }
 function gcTouchStart(e){
   e.preventDefault();
   if(!gameIsDrawer()) return;
-  const t = e.touches[0];
   gcDrawing = true;
+  const t = e.touches[0];
   const pos = gcGetPos(t, e.target);
   gcLastX = pos.x; gcLastY = pos.y;
+  gcApplyStroke({type:'dot',x:pos.x,y:pos.y,size:gcEraser?gcSize*3:gcSize,color:gcEraser?'#ffffff':gcColor});
+  gcSendStroke('dot', pos.x, pos.y);
 }
 function gcTouchMove(e){
   e.preventDefault();
   if(!gcDrawing || !gameIsDrawer()) return;
   const t = e.touches[0];
   const pos = gcGetPos(t, e.target);
-  gcCtx.beginPath();
-  gcCtx.moveTo(gcLastX, gcLastY);
-  gcCtx.lineTo(pos.x, pos.y);
-  gcCtx.strokeStyle = gcEraser ? '#ffffff' : gcColor;
-  gcCtx.lineWidth = gcEraser ? gcSize*3 : gcSize;
-  gcCtx.lineCap = 'round';
-  gcCtx.lineJoin = 'round';
-  gcCtx.stroke();
+  gcApplyStroke({type:'line',x:gcLastX,y:gcLastY,x2:pos.x,y2:pos.y,size:gcEraser?gcSize*3:gcSize,color:gcEraser?'#ffffff':gcColor});
+  gcSendStroke('line', gcLastX, gcLastY, pos.x, pos.y);
   gcLastX = pos.x; gcLastY = pos.y;
 }
 
@@ -3359,17 +3473,177 @@ function gameToggleEraser(){
 }
 function gameClearCanvas(){
   if(!gcCtx) return;
-  gcCtx.fillStyle = '#ffffff';
-  gcCtx.fillRect(0, 0, GAME_CANVAS_W, GAME_CANVAS_H);
+  gcApplyStroke({type:'clear'});
+  gcSendStroke('clear', 0, 0);
 }
 function gameIsDrawer(){
   if(!CU || gameState !== 'playing') return false;
-  const drawer = gameDrawOrder[gameRound % gameDrawOrder.length];
+  const drawer = gameDrawOrder[gameRound % Math.max(1, gameDrawOrder.length)];
   return drawer && drawer.username === CU.username;
 }
 
+// ── Listen to incoming strokes from Firebase ──
+let gcLastStrokeTs = 0;
+function gameSetupCanvasListener(){
+  gameFbListen('stroke', (data) => {
+    if(!data) return;
+    // Skip own strokes (already drawn locally) and old/wrong round strokes
+    if(data.ts === gcLastStrokeTs) return;
+    if(data.round !== gameRound) return;
+    const drawer = gameDrawOrder[gameRound % Math.max(1, gameDrawOrder.length)];
+    if(drawer && drawer.username === CU?.username) return; // I'm drawing, skip
+    gcLastStrokeTs = data.ts;
+    gcApplyStroke(data);
+  });
+}
+
+// ── Listen to game state from Firebase (for non-host devices) ──
+function gameSetupStateListener(){
+  gameFbListen('state', (data) => {
+    if(!data) return;
+    // Sync game state changes from host
+    if(data.state === 'playing' && gameState === 'lobby'){
+      // Another player started the game — join it
+      gameRound = data.round || 0;
+      gameScores = data.scores || {};
+      gameDrawOrder = data.drawOrder || [];
+      gameWord = data.word || '';
+      gamePlayers = data.players || members.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME);
+      gameState = 'playing';
+      document.getElementById('game-lobby').style.display = 'none';
+      document.getElementById('game-arena').classList.add('show');
+      document.getElementById('game-result').classList.remove('show');
+      gameInitCanvas();
+      gameApplyRoundUI();
+      gameRenderScoreboard();
+      return;
+    }
+    if(data.state === 'round' && gameState === 'playing'){
+      // New round started by host
+      if(data.round !== gameRound){
+        gameRound = data.round;
+        gameScores = data.scores || gameScores;
+        gameDrawOrder = data.drawOrder || gameDrawOrder;
+        gameWord = data.word || '';
+        gameGuessedCorrect = {};
+        gameClearCanvas();
+        gameApplyRoundUI();
+        gameRenderScoreboard();
+      }
+    }
+    if(data.state === 'result'){
+      gameScores = data.scores || gameScores;
+      gameShowResult();
+    }
+  });
+
+  // Listen to guesses from Firebase
+  gameFbListen('guesses', (data) => {
+    if(!data || gameState !== 'playing') return;
+    const feed = document.getElementById('game-guess-feed');
+    if(!feed) return;
+    // Render all guesses sorted by ts
+    const items = Object.values(data).sort((a,b)=>(a.ts||0)-(b.ts||0));
+    feed.innerHTML = '';
+    items.forEach(g => {
+      if(g.system){
+        const div = document.createElement('div');
+        div.className = 'game-guess-item system';
+        div.innerHTML = `<span class="game-guess-txt">${g.text}</span>`;
+        feed.appendChild(div);
+      } else {
+        const isCorrect = g.correct;
+        const div = document.createElement('div');
+        div.className = 'game-guess-item' + (isCorrect ? ' correct' : '');
+        div.innerHTML = `<span class="game-guess-name">${g.name}:</span><span class="game-guess-txt">${isCorrect ? '✅ ' + g.text : g.text}</span>`;
+        feed.appendChild(div);
+        // track correct guesses for round-end logic (host only)
+        if(isCorrect) gameGuessedCorrect[g.username] = true;
+      }
+    });
+    feed.scrollTop = feed.scrollHeight;
+
+    // Host checks if everyone guessed
+    if(gameIsHost){
+      const drawer = gameDrawOrder[gameRound % Math.max(1,gameDrawOrder.length)];
+      const guessers = gamePlayers.filter(p => p.username !== (drawer?.username||''));
+      if(guessers.length > 0 && guessers.every(p => gameGuessedCorrect[p.username])){
+        clearInterval(gameTimer);
+        setTimeout(()=>gameHostRoundEnd(true), 500);
+      }
+    }
+    gameRenderScoreboard();
+  });
+
+  // Listen to scores
+  gameFbListen('scores', (data) => {
+    if(!data) return;
+    gameScores = data;
+    gameRenderScoreboard();
+  });
+}
+
+// ── Apply round UI for current state ──
+function gameApplyRoundUI(){
+  const drawer = gameDrawOrder[gameRound % Math.max(1, gameDrawOrder.length)];
+  if(!drawer) return;
+  const isMe = CU && drawer.username === CU.username;
+
+  const roundBadge = document.getElementById('game-round-badge');
+  if(roundBadge) roundBadge.textContent = 'Ronde '+(gameRound+1)+' / '+gameDrawOrder.length;
+
+  const dAv = document.getElementById('game-drawer-av');
+  const dName = document.getElementById('game-drawer-name');
+  if(dAv){ dAv.innerHTML = drawer.photo ? `<img src="${drawer.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (drawer.avatar||'✨'); if(drawer.color) dAv.style.background=drawer.color; }
+  if(dName) dName.textContent = drawer.name.split(' ')[0];
+
+  const tools = document.getElementById('game-draw-tools');
+  if(tools) tools.style.display = isMe ? 'flex' : 'none';
+
+  const wordEl = document.getElementById('game-word-display');
+  if(wordEl){
+    if(isMe){ wordEl.className='game-word-secret'; wordEl.textContent=gameWord; }
+    else { wordEl.className='game-word-hidden'; wordEl.textContent='•'.repeat(Math.max(3,gameWord.length)); }
+  }
+
+  const guessInp = document.getElementById('game-guess-inp');
+  const guessSend = document.getElementById('game-guess-send');
+  if(guessInp){ guessInp.disabled=isMe; guessInp.value=''; guessInp.placeholder=isMe?'Kamu yang menggambar! 🎨':'Ketik tebakan...'; }
+  if(guessSend) guessSend.disabled=isMe;
+
+  const overlay = document.getElementById('game-canvas-overlay');
+  const overlayIcon = document.getElementById('game-overlay-icon');
+  const overlayMsg = document.getElementById('game-overlay-msg');
+  const overlaySub = document.getElementById('game-overlay-sub');
+  if(overlay){
+    overlayIcon.textContent = isMe ? '✏️' : '👀';
+    overlayMsg.textContent = isMe ? 'Kata kamu: '+gameWord : drawer.name.split(' ')[0]+' sedang menggambar...';
+    overlaySub.textContent = isMe ? 'Gambar kata di atas! Jangan tulis huruf ya!' : 'Tebak kata di kolom bawah!';
+    overlay.classList.add('show');
+    setTimeout(()=>overlay.classList.remove('show'), isMe?2500:1800);
+  }
+
+  // Clear guess feed in FB for new round
+  if(gameIsHost) fbSet(FB_GAME+'/guesses', null);
+
+  // Start round timer
+  gameTimerLeft = GAME_TIMER_SECS;
+  gameUpdateTimer();
+  clearInterval(gameTimer);
+  gameTimer = setInterval(()=>{
+    gameTimerLeft--;
+    gameUpdateTimer();
+    if(gameTimerLeft <= 0 && gameIsHost){
+      clearInterval(gameTimer);
+      gameHostRoundEnd(false);
+    } else if(gameTimerLeft <= 0){
+      clearInterval(gameTimer); // non-host just stops local timer
+    }
+  }, 1000);
+}
+
+// ── Lobby: show online members accurately ──
 function gameBuildLobby(){
-  // Get real members, exclude hidden admin
   const realMembers = members.filter(m => m.username !== HIDDEN_ADMIN_USERNAME);
   gamePlayers = realMembers;
   const grid = document.getElementById('game-players-grid');
@@ -3380,14 +3654,17 @@ function gameBuildLobby(){
   if(!grid) return;
 
   const count = gamePlayers.length;
-  if(countEl) countEl.textContent = count + ' pemain';
+  if(countEl) countEl.textContent = count + ' member terdaftar';
   if(curCountEl) curCountEl.textContent = count;
 
   grid.innerHTML = gamePlayers.map(p => {
-    const av = p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : p.avatar;
-    return `<div class="game-player-chip" style="border-color:rgba(255,255,255,.18);">
+    const online = isOnline(p.username);
+    const isMe = p.username === CU?.username;
+    const av = p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (p.avatar||'✨');
+    return `<div class="game-player-chip ${isMe?'selected':''}">
       <div class="game-player-av" style="${p.color?'background:'+p.color:''}">${av}</div>
       <div class="game-player-name">${p.name.split(' ')[0]}</div>
+      <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;${online?'background:#4ade80;box-shadow:0 0 5px #4ade80':'background:rgba(255,255,255,.2)'}"></div>
     </div>`;
   }).join('');
 
@@ -3396,158 +3673,115 @@ function gameBuildLobby(){
   if(startBtn) startBtn.disabled = !canStart;
 }
 
-function gameStart(){
-  if(gamePlayers.length < GAME_MIN_PLAYERS){
-    toast('⚠️ Butuh minimal '+GAME_MIN_PLAYERS+' pemain!'); return;
-  }
-  // Shuffle draw order
+// ── Start game (host) ──
+async function gameStart(){
+  if(gamePlayers.length < GAME_MIN_PLAYERS){ toast('⚠️ Butuh minimal '+GAME_MIN_PLAYERS+' pemain!'); return; }
+
+  // Ask notification permission for this device
+  await gameRequestNotification();
+
+  // Setup notifications for others
+  gameSetupNotifListener();
+
+  gameIsHost = true;
   gameDrawOrder = [...gamePlayers].sort(()=>Math.random()-.5);
   gameRound = 0;
   gameScores = {};
   gamePlayers.forEach(p => { gameScores[p.username] = 0; });
   gameState = 'playing';
+  gameGuessedCorrect = {};
+  gcInitialized = false; // allow reinit
 
-  // Show arena, hide lobby
   document.getElementById('game-lobby').style.display = 'none';
   document.getElementById('game-arena').classList.add('show');
   document.getElementById('game-result').classList.remove('show');
 
   gameInitCanvas();
-  gameStartRound();
-}
+  gameSetupCanvasListener();
+  gameSetupStateListener();
 
-function gameStartRound(){
-  if(gameRound >= gameDrawOrder.length){
-    gameShowResult(); return;
-  }
-  gameGuessedCorrect = {};
-  const drawer = gameDrawOrder[gameRound];
+  // Broadcast game start to Firebase
   gameWord = GAME_WORDS[Math.floor(Math.random() * GAME_WORDS.length)];
+  const statePayload = {
+    state: 'playing', round: 0,
+    drawOrder: gameDrawOrder, players: gamePlayers,
+    word: gameWord, scores: gameScores,
+    startedBy: CU.username, ts: Date.now()
+  };
+  if(window._fbReady){ await fbSet(FB_GAME+'/state', statePayload); await fbSet(FB_GAME+'/guesses', null); await fbSet(FB_GAME+'/stroke', null); }
 
-  // Update UI
-  const roundBadge = document.getElementById('game-round-badge');
-  if(roundBadge) roundBadge.textContent = 'Ronde '+(gameRound+1)+' / '+gameDrawOrder.length;
+  // Notify other devices
+  const drawerName = gameDrawOrder[0]?.name?.split(' ')[0] || '?';
+  await gameBroadcastNotif('🎨 Game Tebak Gambar Dimulai!', CU.name.split(' ')[0]+' memulai game! '+drawerName+' yang menggambar pertama.');
 
-  const dAv = document.getElementById('game-drawer-av');
-  const dName = document.getElementById('game-drawer-name');
-  if(dAv) dAv.textContent = drawer.avatar || '✨';
-  if(dAv && drawer.color) dAv.style.background = drawer.color;
-  if(dName) dName.textContent = drawer.name.split(' ')[0];
-
-  // Clear canvas
-  gameClearCanvas();
-
-  // Show/hide drawing tools
-  const tools = document.getElementById('game-draw-tools');
-  const isMe = CU && drawer.username === CU.username;
-  if(tools) tools.style.display = isMe ? 'flex' : 'none';
-
-  // Word display
-  const wordEl = document.getElementById('game-word-display');
-  if(wordEl){
-    if(isMe){
-      wordEl.className = 'game-word-secret';
-      wordEl.textContent = gameWord;
-    } else {
-      wordEl.className = 'game-word-hidden';
-      wordEl.textContent = '•'.repeat(gameWord.length);
-    }
-  }
-
-  // Overlay message
-  const overlay = document.getElementById('game-canvas-overlay');
-  const overlayIcon = document.getElementById('game-overlay-icon');
-  const overlayMsg = document.getElementById('game-overlay-msg');
-  const overlaySub = document.getElementById('game-overlay-sub');
-  if(overlay && overlayMsg){
-    if(isMe){
-      overlayIcon.textContent = '✏️';
-      overlayMsg.textContent = 'Kata kamu: ' + gameWord;
-      overlaySub.textContent = 'Gambar kata di atas! Jangan tulis huruf/angka ya!';
-    } else {
-      overlayIcon.textContent = '👀';
-      overlayMsg.textContent = drawer.name.split(' ')[0] + ' sedang menggambar...';
-      overlaySub.textContent = 'Tebak kata di kolom bawah!';
-    }
-    overlay.classList.add('show');
-    setTimeout(()=>{ overlay.classList.remove('show'); }, isMe ? 2500 : 1800);
-  }
-
-  // Guess input
-  const guessInp = document.getElementById('game-guess-inp');
-  const guessSend = document.getElementById('game-guess-send');
-  if(guessInp){ guessInp.disabled = isMe; guessInp.value = ''; guessInp.placeholder = isMe ? 'Kamu yang menggambar! 🎨' : 'Ketik tebakan...'; }
-  if(guessSend) guessSend.disabled = isMe;
-
-  // Clear guess feed
-  const feed = document.getElementById('game-guess-feed');
-  if(feed) feed.innerHTML = '';
-  gameAddSystemMsg(drawer.name.split(' ')[0] + ' mulai menggambar! Tebak apa yang digambar ya! 🎨');
-
-  // Build scoreboard
+  gameApplyRoundUI();
   gameRenderScoreboard();
 
-  // Start timer
-  gameTimerLeft = GAME_TIMER_SECS;
-  gameUpdateTimer();
-  clearInterval(gameTimer);
-  gameTimer = setInterval(()=>{
-    gameTimerLeft--;
-    gameUpdateTimer();
-    if(gameTimerLeft <= 0){
-      clearInterval(gameTimer);
-      gameRoundEnd(false);
-    }
-  }, 1000);
+  // Add system msg to guess feed
+  await gameAddFbSystemMsg('Game dimulai! '+(gameDrawOrder[0]?.name?.split(' ')[0])+' menggambar pertama 🎨');
 }
 
-function gameUpdateTimer(){
-  const num = document.getElementById('game-timer-num');
-  const fg = document.getElementById('game-timer-fg');
-  if(num) num.textContent = gameTimerLeft;
-  if(fg){
-    const circumference = 2 * Math.PI * 22;
-    const offset = circumference * (1 - gameTimerLeft / GAME_TIMER_SECS);
-    fg.style.strokeDashoffset = offset;
-    fg.style.stroke = gameTimerLeft <= 10 ? '#fb7185' : 'url(#timerGrad)';
+async function gameAddFbSystemMsg(txt){
+  if(window._fbReady){
+    const {db,ref,push:fbPushFn} = window._fb;
+    await fbPushFn(ref(db, FB_GAME+'/guesses'), {system:true, text:txt, ts:Date.now()});
   }
 }
 
-function gameRoundEnd(allGuessed){
+// ── Host-only round end ──
+async function gameHostRoundEnd(allGuessed){
+  if(!gameIsHost) return;
   clearInterval(gameTimer);
-  const drawer = gameDrawOrder[gameRound];
-  const wordEl = document.getElementById('game-word-display');
-  if(wordEl){ wordEl.className = 'game-word-secret'; wordEl.textContent = gameWord; }
+  const drawer = gameDrawOrder[gameRound % Math.max(1,gameDrawOrder.length)];
 
-  // Show canvas overlay with answer
+  // Reveal word
+  const wordEl = document.getElementById('game-word-display');
+  if(wordEl){ wordEl.className='game-word-secret'; wordEl.textContent=gameWord; }
+
+  // Overlay
   const overlay = document.getElementById('game-canvas-overlay');
-  const overlayIcon = document.getElementById('game-overlay-icon');
-  const overlayMsg = document.getElementById('game-overlay-msg');
-  const overlaySub = document.getElementById('game-overlay-sub');
   if(overlay){
-    overlayIcon.textContent = allGuessed ? '🎉' : '⏰';
-    overlayMsg.textContent = allGuessed ? 'Semua berhasil menebak!' : 'Waktu habis!';
-    overlaySub.textContent = 'Kata yang benar: ' + gameWord;
+    document.getElementById('game-overlay-icon').textContent = allGuessed ? '🎉' : '⏰';
+    document.getElementById('game-overlay-msg').textContent = allGuessed ? 'Semua berhasil menebak!' : 'Waktu habis!';
+    document.getElementById('game-overlay-sub').textContent = 'Kata yang benar: '+gameWord;
     overlay.classList.add('show');
   }
 
-  // Disable guessing
-  const guessInp = document.getElementById('game-guess-inp');
-  const guessSend = document.getElementById('game-guess-send');
-  if(guessInp) guessInp.disabled = true;
-  if(guessSend) guessSend.disabled = true;
+  await gameAddFbSystemMsg('Ronde selesai! Kata yang benar: 🔑 '+gameWord);
+  await fbSet(FB_GAME+'/scores', gameScores);
 
-  gameAddSystemMsg('Ronde selesai! Kata yang benar: 🔑 ' + gameWord);
-  gameRenderScoreboard();
+  // Notify
+  await gameBroadcastNotif('Ronde '+(gameRound+1)+' Selesai! 🔑', 'Kata: '+gameWord+' — Ronde berikutnya segera dimulai!');
 
-  setTimeout(()=>{
+  setTimeout(async ()=>{
     if(overlay) overlay.classList.remove('show');
     gameRound++;
-    gameStartRound();
+    if(gameRound >= gameDrawOrder.length){
+      // Game over
+      await fbSet(FB_GAME+'/state', {state:'result', scores:gameScores, ts:Date.now()});
+      await gameBroadcastNotif('🏆 Game Selesai!', 'Lihat siapa yang menang!');
+      gameShowResult();
+    } else {
+      gameWord = GAME_WORDS[Math.floor(Math.random() * GAME_WORDS.length)];
+      gameGuessedCorrect = {};
+      gameClearCanvas();
+      await fbSet(FB_GAME+'/state', {
+        state:'round', round:gameRound, drawOrder:gameDrawOrder,
+        word:gameWord, scores:gameScores, ts:Date.now()
+      });
+      await fbSet(FB_GAME+'/guesses', null);
+      await fbSet(FB_GAME+'/stroke', null);
+      const drawerName = gameDrawOrder[gameRound]?.name?.split(' ')[0] || '?';
+      await gameBroadcastNotif('🎨 Ronde '+(gameRound+1)+' Dimulai!', drawerName+' sekarang yang menggambar. Tebak!');
+      gameApplyRoundUI();
+      gameRenderScoreboard();
+      await gameAddFbSystemMsg((gameDrawOrder[gameRound]?.name?.split(' ')[0])+' mulai menggambar ronde '+(gameRound+1)+'! 🎨');
+    }
   }, 3200);
 }
 
-function gameSubmitGuess(){
+// ── Submit guess ──
+async function gameSubmitGuess(){
   if(!CU || gameState !== 'playing') return;
   if(gameIsDrawer()) return;
   const inp = document.getElementById('game-guess-inp');
@@ -3555,72 +3789,72 @@ function gameSubmitGuess(){
   const guess = inp.value.trim();
   if(!guess) return;
   inp.value = '';
+  if(gameGuessedCorrect[CU.username]) return; // already got it
 
-  // Check if already guessed correctly
-  if(gameGuessedCorrect[CU.username]) return;
-
-  // Add to feed
   const isCorrect = guess.toLowerCase() === gameWord.toLowerCase();
-  gameAddGuess(CU.name.split(' ')[0], guess, isCorrect);
-
-  if(isCorrect){
-    gameGuessedCorrect[CU.username] = true;
-    // Points based on time remaining & order
-    const guessedCount = Object.keys(gameGuessedCorrect).length;
-    const timeBonus = Math.round(gameTimerLeft / GAME_TIMER_SECS * 50);
-    const orderBonus = Math.max(0, 30 - (guessedCount - 1) * 10);
-    const pts = 20 + timeBonus + orderBonus;
-    gameScores[CU.username] = (gameScores[CU.username] || 0) + pts;
-
-    // Bonus for drawer
-    const drawer = gameDrawOrder[gameRound];
-    gameScores[drawer.username] = (gameScores[drawer.username] || 0) + 10;
-
-    gameAddSystemMsg('✅ ' + CU.name.split(' ')[0] + ' menebak benar! +' + pts + ' poin!');
-    gameRenderScoreboard();
-
-    // Flash guess area
-    const guessArea = document.querySelector('.game-guess-area');
-    if(guessArea){ guessArea.classList.add('game-correct-flash'); setTimeout(()=>guessArea.classList.remove('game-correct-flash'),500); }
-
-    // Check if everyone guessed
-    const guessers = gamePlayers.filter(p => p.username !== drawer.username);
-    if(guessers.every(p => gameGuessedCorrect[p.username])){
-      gameRoundEnd(true);
+  // Push guess to Firebase
+  if(window._fbReady){
+    const {db,ref,push:fbPushFn} = window._fb;
+    let pts = 0;
+    if(isCorrect){
+      gameGuessedCorrect[CU.username] = true;
+      const guessedCount = Object.keys(gameGuessedCorrect).length;
+      const timeBonus = Math.round(gameTimerLeft / GAME_TIMER_SECS * 50);
+      const orderBonus = Math.max(0, 30 - (guessedCount - 1) * 10);
+      pts = 20 + timeBonus + orderBonus;
+      gameScores[CU.username] = (gameScores[CU.username] || 0) + pts;
+      // Drawer bonus
+      const drawer = gameDrawOrder[gameRound % Math.max(1,gameDrawOrder.length)];
+      if(drawer) gameScores[drawer.username] = (gameScores[drawer.username] || 0) + 10;
+      await fbSet(FB_GAME+'/scores', gameScores);
+      // Flash
+      const guessArea = document.querySelector('.game-guess-area');
+      if(guessArea){ guessArea.classList.add('game-correct-flash'); setTimeout(()=>guessArea.classList.remove('game-correct-flash'),500); }
     }
+    await fbPushFn(ref(db, FB_GAME+'/guesses'), {
+      username: CU.username, name: CU.name.split(' ')[0],
+      text: guess, correct: isCorrect,
+      pts, ts: Date.now()
+    });
+    if(isCorrect) await gameAddFbSystemMsg('✅ '+CU.name.split(' ')[0]+' menebak benar! +'+pts+' poin!');
+  } else {
+    // Fallback local
+    const isCorrect2 = guess.toLowerCase() === gameWord.toLowerCase();
+    gameAddGuessLocal(CU.name.split(' ')[0], guess, isCorrect2);
   }
 }
 
-function gameAddGuess(name, text, isCorrect){
+function gameAddGuessLocal(name, text, isCorrect){
   const feed = document.getElementById('game-guess-feed');
   if(!feed) return;
   const div = document.createElement('div');
-  div.className = 'game-guess-item' + (isCorrect ? ' correct' : '');
-  div.innerHTML = `<span class="game-guess-name">${name}:</span><span class="game-guess-txt">${isCorrect ? '✅ ' + text : text}</span>`;
+  div.className = 'game-guess-item' + (isCorrect?' correct':'');
+  div.innerHTML = `<span class="game-guess-name">${name}:</span><span class="game-guess-txt">${isCorrect?'✅ '+text:text}</span>`;
   feed.appendChild(div);
   feed.scrollTop = feed.scrollHeight;
 }
 
-function gameAddSystemMsg(txt){
-  const feed = document.getElementById('game-guess-feed');
-  if(!feed) return;
-  const div = document.createElement('div');
-  div.className = 'game-guess-item system';
-  div.innerHTML = `<span class="game-guess-txt">${txt}</span>`;
-  feed.appendChild(div);
-  feed.scrollTop = feed.scrollHeight;
+function gameUpdateTimer(){
+  const num = document.getElementById('game-timer-num');
+  const fg = document.getElementById('game-timer-fg');
+  if(num) num.textContent = gameTimerLeft;
+  if(fg){
+    const circumference = 2*Math.PI*22;
+    const offset = circumference*(1-gameTimerLeft/GAME_TIMER_SECS);
+    fg.style.strokeDashoffset = offset;
+    fg.style.stroke = gameTimerLeft<=10?'#fb7185':'url(#timerGrad)';
+  }
 }
 
 function gameRenderScoreboard(){
   const list = document.getElementById('game-sb-list');
   if(!list) return;
   const sorted = gamePlayers
-    .map(p => ({...p, pts: gameScores[p.username] || 0}))
-    .sort((a,b) => b.pts - a.pts);
-
-  list.innerHTML = sorted.map((p, i) => {
+    .map(p => ({...p, pts: gameScores[p.username]||0}))
+    .sort((a,b)=>b.pts-a.pts);
+  list.innerHTML = sorted.map((p,i)=>{
     const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    const av = p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : p.avatar;
+    const av = p.photo?`<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`:(p.avatar||'✨');
     return `<div class="game-sb-item">
       <div class="game-sb-rank ${rankClass}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
       <div class="game-sb-av" style="${p.color?'background:'+p.color:''}">${av}</div>
@@ -3636,33 +3870,28 @@ function gameShowResult(){
   document.getElementById('game-arena').classList.remove('show');
   const result = document.getElementById('game-result');
   result.classList.add('show');
-
-  const sorted = gamePlayers
-    .map(p => ({...p, pts: gameScores[p.username] || 0}))
-    .sort((a,b) => b.pts - a.pts);
-
+  const sorted = gamePlayers.map(p=>({...p,pts:gameScores[p.username]||0})).sort((a,b)=>b.pts-a.pts);
   // Podium
   const podium = document.getElementById('game-result-podium');
   if(podium){
-    const order = [sorted[1], sorted[0], sorted[2]].filter(Boolean);
-    const barClasses = ['p2','p1','p3'];
-    const labels = ['2','1','3'];
-    podium.innerHTML = order.map((p, i) => {
-      const av = p && p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (p ? p.avatar : '');
-      return p ? `<div class="game-podium-item">
+    const order = [sorted[1],sorted[0],sorted[2]].filter(Boolean);
+    const barClasses=['p2','p1','p3'];
+    const labels=['2','1','3'];
+    podium.innerHTML = order.map((p,i)=>{
+      const av=p.photo?`<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`:(p.avatar||'✨');
+      return `<div class="game-podium-item">
         <div class="game-podium-av" style="${p.color?'background:'+p.color:''}">${av}</div>
         <div class="game-podium-name">${p.name.split(' ')[0]}</div>
         <div class="game-podium-pts">${p.pts} pts</div>
         <div class="game-podium-bar ${barClasses[i]}">${labels[i]}</div>
-      </div>` : '';
+      </div>`;
     }).join('');
   }
-
   // Full list
   const resList = document.getElementById('game-result-list');
   if(resList){
-    resList.innerHTML = sorted.map((p, i) => {
-      const av = p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : p.avatar;
+    resList.innerHTML = sorted.map((p,i)=>{
+      const av=p.photo?`<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`:(p.avatar||'✨');
       return `<div class="game-res-item">
         <div class="game-res-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
         <div class="game-res-av" style="${p.color?'background:'+p.color:''}">${av}</div>
@@ -3671,26 +3900,65 @@ function gameShowResult(){
       </div>`;
     }).join('');
   }
-
   launchConfetti();
-  toast('🏆 Game selesai! '+sorted[0].name.split(' ')[0]+' menang! 🎉', 4000);
+  toast('🏆 '+sorted[0].name.split(' ')[0]+' menang! 🎉',4000);
 }
 
-function gameReset(){
+async function gameReset(){
   clearInterval(gameTimer);
-  gameState = 'lobby';
-  gameRound = 0;
-  gameScores = {};
-  gameGuessedCorrect = {};
-  gameDrawOrder = [];
-  gameClearCanvas();
-
+  gameCleanupListeners();
+  gameState='lobby'; gameRound=0; gameScores={}; gameGuessedCorrect={};
+  gameDrawOrder=[]; gameIsHost=false; gcInitialized=false;
+  if(gcCtx){ gcCtx.fillStyle='#ffffff'; gcCtx.fillRect(0,0,GAME_CANVAS_W,GAME_CANVAS_H); }
+  // Clean Firebase game state
+  if(window._fbReady) await fbSet(FB_GAME, null);
   document.getElementById('game-arena').classList.remove('show');
   document.getElementById('game-result').classList.remove('show');
-  document.getElementById('game-lobby').style.display = '';
-  document.getElementById('game-draw-tools').style.display = 'none';
-
+  document.getElementById('game-lobby').style.display='';
+  const tools = document.getElementById('game-draw-tools');
+  if(tools) tools.style.display='none';
   gameBuildLobby();
+}
+
+// Auto-setup notif listener when navigating to game page (for receiving notifications even as non-host)
+function gameOnPageEnter(){
+  gameBuildLobby();
+  // Request notification permission proactively
+  if('Notification' in window && Notification.permission === 'default'){
+    setTimeout(()=>{
+      if(document.getElementById('page-game')?.classList.contains('active')){
+        gameRequestNotification();
+      }
+    }, 1200);
+  }
+  // Listen for incoming game notifs even before game starts
+  if(window._fbReady && Notification.permission === 'granted'){
+    gameSetupNotifListener();
+  }
+  // Check if a game is already in progress in Firebase
+  if(window._fbReady && gameState === 'lobby'){
+    gameFbGet('state').then(data=>{
+      if(!data) return;
+      if((data.state==='playing'||data.state==='round') && gameState==='lobby'){
+        // Game in progress — offer to join
+        toast('🎮 Ada game yang sedang berlangsung! Buka Game untuk bergabung.',4000);
+        gameRound = data.round || 0;
+        gameScores = data.scores || {};
+        gameDrawOrder = data.drawOrder || [];
+        gameWord = data.word || '';
+        gamePlayers = data.players || members.filter(m=>m.username!==HIDDEN_ADMIN_USERNAME);
+        gameState = 'playing';
+        document.getElementById('game-lobby').style.display='none';
+        document.getElementById('game-arena').classList.add('show');
+        gcInitialized=false;
+        gameInitCanvas();
+        gameSetupCanvasListener();
+        gameSetupStateListener();
+        gameApplyRoundUI();
+        gameRenderScoreboard();
+      }
+    });
+  }
 }
 
 // ===================== TOAST =====================
