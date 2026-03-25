@@ -2,8 +2,39 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Crazy Squad 💜</title>
+
+<!-- PWA Meta -->
+<meta name="application-name" content="Crazy Squad">
+<meta name="description" content="Ruang privat Crazy Squad — chat, kenangan, dan game bareng! 💜">
+<meta name="theme-color" content="#3b0080">
+<meta name="background-color" content="#0a001f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crazy Squad">
+
+<!-- PWA Manifest (inline via data URI) -->
+<link rel="manifest" href="data:application/manifest+json,{
+  %22name%22:%22Crazy Squad 💜%22,
+  %22short_name%22:%22CrazySquad%22,
+  %22description%22:%22Ruang privat Crazy Squad — chat, kenangan, dan game bareng!%22,
+  %22start_url%22:%22./%22,
+  %22display%22:%22standalone%22,
+  %22orientation%22:%22portrait%22,
+  %22background_color%22:%22%230a001f%22,
+  %22theme_color%22:%22%233b0080%22,
+  %22icons%22:[
+    {%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%233b0080'/%3E%3Ctext x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle'%3E💜%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any maskable%22}
+  ]
+}">
+
+<!-- Apple Touch Icon (inline SVG as data URI) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%233b0080'/><text x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle'>💜</text></svg>">
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>">
 <!-- Firebase SDK -->
 <script type="module">
 // ===================== FIREBASE CONFIG =====================
@@ -4036,6 +4067,136 @@ if(location.protocol === 'file:'){
   }, 500);
 }
 checkSession();
+</script>
+
+<!-- ===================== PWA SERVICE WORKER ===================== -->
+<script>
+// Register Service Worker
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  window.addEventListener('load', ()=>{
+    // Inline SW as a Blob URL
+    const swCode = `
+const CACHE = 'crazy-squad-v1';
+const OFFLINE_ASSETS = ['/'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(OFFLINE_ASSETS)).catch(()=>{})
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', e => {
+  // Only cache same-origin GET requests, skip Firebase/CDN
+  if(e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if(url.origin !== location.origin) return;
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
+  );
+});
+
+// Push notification handler
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {title:'Crazy Squad 💜', body:'Ada notifikasi baru!'};
+  e.waitUntil(
+    self.registration.showNotification(data.title || 'Crazy Squad 💜', {
+      body: data.body || '',
+      icon: data.icon || '',
+      badge: '',
+      tag: 'crazy-squad',
+      renotify: true
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow('/'));
+});
+`;
+    const blob = new Blob([swCode], {type:'application/javascript'});
+    const swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl)
+      .then(reg => {
+        console.log('✅ SW registered:', reg.scope);
+        window._swReg = reg;
+      })
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+// ── PWA Install Prompt ──
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  // Show install banner after 4 seconds if not already installed
+  setTimeout(showPwaBanner, 4000);
+});
+
+function showPwaBanner(){
+  if(!_pwaPrompt) return;
+  if(document.getElementById('pwa-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwa-banner';
+  banner.style.cssText = `
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;
+    background:rgba(20,0,50,.96);backdrop-filter:blur(28px);
+    border:1px solid rgba(192,132,252,.35);border-radius:18px;
+    padding:13px 18px;display:flex;align-items:center;gap:12px;
+    box-shadow:0 8px 36px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);
+    font-family:'Nunito','Segoe UI',Arial,sans-serif;
+    animation:cardin .5s cubic-bezier(.34,1.56,.64,1) both;
+    max-width:340px;width:calc(100vw - 40px);
+  `;
+  banner.innerHTML = `
+    <div style="font-size:2rem;flex-shrink:0;">💜</div>
+    <div style="flex:1;">
+      <div style="font-weight:800;font-size:.88rem;color:#fff;">Install Crazy Squad</div>
+      <div style="font-size:.72rem;color:rgba(255,255,255,.55);font-weight:600;margin-top:2px;">Simpan ke layar utama HP kamu!</div>
+    </div>
+    <button onclick="installPwa()" style="background:linear-gradient(135deg,#9333ea,#ec4899);border:none;border-radius:10px;padding:8px 14px;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;">Install ✨</button>
+    <button onclick="document.getElementById('pwa-banner').remove();_pwaPrompt=null;" style="background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:1rem;padding:2px 4px;flex-shrink:0;">✕</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+async function installPwa(){
+  if(!_pwaPrompt) return;
+  _pwaPrompt.prompt();
+  const {outcome} = await _pwaPrompt.userChoice;
+  _pwaPrompt = null;
+  const banner = document.getElementById('pwa-banner');
+  if(banner) banner.remove();
+  if(outcome === 'accepted') {
+    setTimeout(()=>{ if(typeof toast==='function') toast('🎉 Crazy Squad berhasil diinstall!', 3500); }, 500);
+  }
+}
+
+// Hide banner if already installed as standalone
+if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone){
+  window.addEventListener('load', ()=>{
+    const banner = document.getElementById('pwa-banner');
+    if(banner) banner.remove();
+    _pwaPrompt = null;
+  });
+}
 </script>
 </body>
 </html>
